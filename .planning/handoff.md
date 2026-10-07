@@ -1104,6 +1104,42 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAe7nlALpJZG6CPmvepg43xtRC5Rq+568P39pvf8miFL
      **每条描边有效线宽直方图**（hairline `0 w` vs 真实 0.25mm）。
   2. `.gitignore` 3b 段的归因已从 `0148cef` 更正为 **`857d352`**（依据 `first-changed-commits`），
      并写明"`0148cef` 瘦身后 hash 未变 ⇒ 它不含这些 blob"。
-- 两处改动 + 本节，将随下一次本地提交入库（**不 push**，等公钥）。
+- 两处改动 + 本节，随本地提交 `c7ad015` 入库（**当时未 push，等公钥**；现已 push，见 §21）。
+
+---
+
+## 21. TRAE 侧第 9 次更新（2026-10-07 21:5x）—— ✅ **push 已完成**，fast-forward，未用 force
+
+用户已把公钥贴到 GitHub，我立刻执行并核验：
+
+| 步骤 | 实测输出 |
+|---|---|
+| `ssh -T git@github.com` | `Hi zzh112212! You've successfully authenticated, but GitHub does not provide shell access.` |
+| `git push origin main` | **`6575031..c7ad015  main -> main`** —— **fast-forward，未用 force** |
+
+推完对**远端**做独立核验（我实测）：
+
+| 观测点 | 值 | 含义 |
+|---|---|---|
+| `origin/main` | `c7ad015` | 与本地一致 |
+| 历史中 `.dwg` | **0 条** | 35.5MB DWG 副本确实已从历史消失 |
+| 最大 blob | **214,825 B** = `DwgToPdf完整经验手册.md` | 0.2MB，正常 |
+| `.git` 本地体积 | **1.20 MB** | 瘦身成果保持 |
+| 已推的 `6575031` / `0148cef` hash | **未变** | 印证 §19.1「改写只影响 5 个提交」 |
+| 上游跟踪 | `main → origin/main`（`status -sb` = `## main...origin/main`，无 ahead/behind） | filter-repo 删掉的 remote-tracking ref 已随 push 自动恢复 |
+
+一处小插曲（不影响结论）：`git fetch origin` 撞上一次 `port 22: Connection timed out`
+—— 与 §20.7 记的"22 偶发超时"一致。**跟踪关系仍然正确**：成功的 push 自己就会把
+`refs/remotes/origin/main` 更新到 `c7ad015`，无需 fetch 兜底。
+
+### 21.1 剩下的收尾（我的判断，请你确认 ☑）
+1. **删备份** `C:\Temp\git_bak_213848`（31.2MB）—— 你 §19.1 自己写的"push 成功后再删"，**现在可以删了**。
+2. **§20.6-3**：手册与 `task_plan.md` 里若仍引用旧 hash（`857d352`/`ade1247`/`1c62452`/`f0db0d6`/`c9c205de`），
+   更新为新 hash（`80fd2b7`/`cbeb0f1`/`2746d6f`/`4b4434d`/`6c4aec5`）。
+3. 上面两条清完，**三个验收条件全部闭环**（①深浅用户认可 ②全量回归无新增失败 ③源图 8/8 与权威原件一致），
+   整个任务即可按用户规则 5 收口（保留最终版 + 清测试文件）。
+
+> 轮询留档（§20.8 那条机制的首轮实测）：21:48:52 启动 → 21:53:53 连续 15 轮无变化 ⇒ 报"停手"，
+> 与你"21:43 后静默等公钥"的自述吻合。机制有效，后续可复用。
 
 
