@@ -32,7 +32,14 @@ param(
     # Int, not bool: `powershell -File` passes every argument as a string and a [bool]
     # parameter rejects "1"/"0". 1 = plot lineweights, 0 = do not.
     [int]$Lineweights = 1,
-    [string]$Suffix = ""            # appended to the output file name, e.g. "_LWon"
+    [string]$Suffix = "",           # appended to the output file name, e.g. "_LWon"
+    # v4.17: when supplied, the plot window / media / scale come from THE TOOL'S OWN frame
+    # recognition (frame_cache.json, written by FrameExtractor) instead of EXTMIN/EXTMAX.
+    # The old EXTMIN/EXTMAX behaviour plotted the ENTIRE drawing (e.g. a 10805x6784 window
+    # for a sheet whose recognized frame is 1682x1189), so its PDFs were not comparable
+    # with the tool's output. Required by the user: "plot with the tool's frame algorithm".
+    [string]$FrameCache = "",
+    [double]$Margin = 10.0
 )
 
 $ErrorActionPreference = "Stop"
@@ -63,6 +70,58 @@ function Read-Group([string]$path, [int]$code) {
     return "<absent>"
 }
 
+# --- the tool's own page spec, ported line-for-line from PageSpec.Resolve --------------
+# The A/B must reproduce the tool's window + scale, otherwise the PDFs are not comparable.
+$PaperLong = @(297.0, 420.0, 594.0, 841.0, 1189.0, 1682.0, 2378.0)
+$MediaNames = @(
+    "ISO_full_bleed_A4_(210.00_x_297.00_MM)", "ISO_full_bleed_A3_(297.00_x_420.00_MM)",
+    "ISO_full_bleed_A2_(420.00_x_594.00_MM)", "ISO_full_bleed_A1_(594.00_x_841.00_MM)",
+    "ISO_full_bleed_A0_(841.00_x_1189.00_MM)", "ISO_full_bleed_2A0_(1189.00_x_1682.00_MM)",
+    "ISO_full_bleed_4A0_(1682.00_x_2378.00_MM)")
+
+function Resolve-PageSpec([double]$fw, [double]$fh, [double]$m) {
+    $tol = 0.03                       # PageSpec.PaperFitTolerance
+    $landscape = $fw -ge $fh
+    if ($landscape) { $frameLong = $fw; $frameShort = $fh }
+    else            { $frameLong = $fh; $frameShort = $fw }
+    $longNeed = $frameLong + 2.0 * $m
+    $shortNeed = $frameShort + 2.0 * $m
+    $idx = 0
+    for ($i = 0; $i -lt $PaperLong.Count; $i++) {
+        $sh = [double][Math]::Round($PaperLong[$i] / [Math]::Sqrt(2.0))
+        if (($PaperLong[$i] * (1.0 + $tol) -ge $longNeed) -and ($sh * (1.0 + $tol) -ge $shortNeed)) { $idx = $i; break }
+    }
+    if ($idx -ge $PaperLong.Count) { $idx = $PaperLong.Count - 1 }
+    $paperLong = $PaperLong[$idx]
+    $paperShort = [double][Math]::Round($paperLong / [Math]::Sqrt(2.0))
+    $winLong = $frameLong + 2.0 * $m
+    $winShort = $frameShort + 2.0 * $m
+    $s = [Math]::Min(($paperLong - 2.0 * $m) / $winLong, ($paperShort - 2.0 * $m) / $winShort)
+    if ($s -le 0.0) { $s = [Math]::Min($paperLong / $frameLong, $paperShort / $frameShort) }
+    [pscustomobject]@{
+        Media = $MediaNames[$idx]
+        Rotation = $(if ($landscape) { 1 } else { 0 })
+        PaperLong = $paperLong; PaperShort = $paperShort; Scale = $s
+    }
+}
+
+function Get-CachedFrame([string]$cachePath, [string]$dwgPath) {
+    # NOTE 2026-10-07: MUST read as UTF-8. Without -Encoding UTF8, PowerShell 5.1
+    # decodes the (UTF-8, no BOM) file with the system ANSI codepage (GBK here).
+    # GBK trail bytes can swallow the following 0x5C byte, so the JSON path
+    # `e:\\TRAE工作文件夹\\...` came back as `e:\\TRAE文件夹\...` with *single*
+    # backslashes -> ConvertFrom-Json threw "Unrecognized escape sequence".
+    $json = Get-Content -LiteralPath $cachePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $full = [IO.Path]::GetFullPath($dwgPath)
+    foreach ($e in $json.entries) {
+        if ($e.path -ieq $full) {
+            return [pscustomobject]@{ MinX = [double]$e.minx; MinY = [double]$e.miny
+                                      MaxX = [double]$e.maxx; MaxY = [double]$e.maxy }
+        }
+    }
+    return $null
+}
+
 $app = [Runtime.InteropServices.Marshal]::GetActiveObject("AutoCAD.Application")
 $app.Visible = $true
 try { $app.DisplayAlerts = 0 } catch { }
@@ -82,17 +141,36 @@ try {
     try { $doc.ActiveLayout = $lay } catch { }
     $lay.ConfigName = "DWG To PDF.pc3"
     try { $lay.StyleSheet = "monochrome.ctb" } catch { }
-    $lay.CanonicalMediaName = "ISO_full_bleed_2A0_(1189.00_x_1682.00_MM)"
-    $ext = $doc.GetVariable("EXTMIN"); $ex2 = $doc.GetVariable("EXTMAX")
-    [double]$xmin = [double]$ext[0];  [double]$ymin = [double]$ext[1]
-    [double]$xmax = [double]$ex2[0];  [double]$ymax = [double]$ex2[1]
-    [double]$mx = 10.0
-    $lay.SetWindowToPlot([double[]]@(($xmin - $mx), ($ymin - $mx)),
-                         [double[]]@(($xmax + $mx), ($ymax + $mx)))
-    $lay.UseStandardScale = $true
-    $lay.StandardScale = 0
+
+    if ($FrameCache) {
+        # v4.17: reproduce the TOOL's own plot window / media / scale from its frame recognition.
+        $fr = Get-CachedFrame $FrameCache $Dwg
+        if ($null -eq $fr) { throw ("no frame_cache.json entry for " + $Dwg) }
+        $ps = Resolve-PageSpec ($fr.MaxX - $fr.MinX) ($fr.MaxY - $fr.MinY) $Margin
+        $llx = $fr.MinX - $Margin; $lly = $fr.MinY - $Margin
+        $urx = $fr.MaxX + $Margin; $ury = $fr.MaxY + $Margin
+        $lay.CanonicalMediaName = $ps.Media
+        # order mirrors CadConverter: rotation -> window -> scale flags -> custom scale -> center
+        $lay.PlotRotation = $ps.Rotation
+        $lay.SetWindowToPlot([double[]]@($llx, $lly), [double[]]@($urx, $ury))
+        $lay.UseStandardScale = $false
+        $lay.PlotType = 4
+        $lay.SetCustomScale($ps.Scale, 1.0)
+        Write-Host ("[frame] {0:N1}x{1:N1}mm -> {2}  rot={3}  s={4:N6}  window=({5:N1},{6:N1})->({7:N1},{8:N1})" -f `
+            ($fr.MaxX - $fr.MinX), ($fr.MaxY - $fr.MinY), $ps.Media, $ps.Rotation, $ps.Scale, $llx, $lly, $urx, $ury)
+    } else {
+        $lay.CanonicalMediaName = "ISO_full_bleed_2A0_(1189.00_x_1682.00_MM)"
+        $ext = $doc.GetVariable("EXTMIN"); $ex2 = $doc.GetVariable("EXTMAX")
+        [double]$xmin = [double]$ext[0];  [double]$ymin = [double]$ext[1]
+        [double]$xmax = [double]$ex2[0];  [double]$ymax = [double]$ex2[1]
+        [double]$mx = $Margin
+        $lay.SetWindowToPlot([double[]]@(($xmin - $mx), ($ymin - $mx)),
+                             [double[]]@(($xmax + $mx), ($ymax + $mx)))
+        $lay.UseStandardScale = $true
+        $lay.StandardScale = 0          # acScaleToFit
+        $lay.PlotType = 4
+    }
     $lay.CenterPlot = $true
-    $lay.PlotType = 4
     try { $lay.PlotWithLineweights = ($Lineweights -ne 0) } catch { }
     try { $lay.RefreshPlotDeviceInfo() } catch { }
     $doc.Regen(-1) | Out-Null

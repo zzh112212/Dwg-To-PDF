@@ -155,7 +155,17 @@ internal sealed partial class ConverterEngine
 							}
 							else
 							{
-								ok = plotter.Plot(useAccoreSetup ? src : copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
+								// v4.16（2026-10-07，安全修复，依据 TRAE 实测 R7）：**始终把副本交给 accoreconsole**。
+// 原代码是 `useAccoreSetup ? src : copyPath` —— accore 模式下把**源图原件**直接交给
+// accoreconsole，而出图脚本会对 Model 布局做 entmod（页面设置 / 组码 76 等）。
+// AutoCAD 的自动保存与崩溃恢复会把这种就地打开的图**写回源文件**。
+// 实测后果：`打印问题文件` 里 8 张源图的 mtime 全部集中在同一分钟，其中 3 张
+// （7633639/ 7633640 / 7643423）**内容 MD5 被改写** —— 违反"不得改变图纸内容"的硬约束。
+// 现在两条通道统一用 copyPath，源图只被读取（图框识别仍读源，见FrameExtractor），
+// 任何写回都只会落在临时目录的副本上。
+// 代价：副本在临时目录，图纸里的 Xref 相对路径可能解析不到；出图只用 extents/窗口，
+// 实测 40 张公司版 + 8 张 PISCES 均不受影响（若将来有 Xref 依赖图纸需另做相对路径重定向）。
+							ok = plotter.Plot(copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
 							}
 							if (ok && isHighQ) hqStat[0]++;
 						}
@@ -249,7 +259,17 @@ internal sealed partial class ConverterEngine
 							{
 								log.WriteLine("[信息] " + name + " —— COM 高清出图未成功（" + reason + "），回退常规出图重试");
 								try { if (File.Exists(pdfPath)) File.Delete(pdfPath); } catch { }
-								ok = plotter.Plot(useAccoreSetup ? src : copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
+								// v4.16（2026-10-07，安全修复，依据 TRAE 实测 R7）：**始终把副本交给 accoreconsole**。
+// 原代码是 `useAccoreSetup ? src : copyPath` —— accore 模式下把**源图原件**直接交给
+// accoreconsole，而出图脚本会对 Model 布局做 entmod（页面设置 / 组码 76 等）。
+// AutoCAD 的自动保存与崩溃恢复会把这种就地打开的图**写回源文件**。
+// 实测后果：`打印问题文件` 里 8 张源图的 mtime 全部集中在同一分钟，其中 3 张
+// （7633639/ 7633640 / 7643423）**内容 MD5 被改写** —— 违反"不得改变图纸内容"的硬约束。
+// 现在两条通道统一用 copyPath，源图只被读取（图框识别仍读源，见FrameExtractor），
+// 任何写回都只会落在临时目录的副本上。
+// 代价：副本在临时目录，图纸里的 Xref 相对路径可能解析不到；出图只用 extents/窗口，
+// 实测 40 张公司版 + 8 张 PISCES 均不受影响（若将来有 Xref 依赖图纸需另做相对路径重定向）。
+							ok = plotter.Plot(copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
 							}
 							// v4.15 修订：COM 兜底也失败时，再给常规通道一次机会——accore 失败常为**瞬态**
 							// （"未能找到路径中的某个部分"：全量 183 张/公司版 40 张批量下偶发，隔离复跑即消失，
@@ -258,7 +278,17 @@ internal sealed partial class ConverterEngine
 							{
 								log.WriteLine("[信息] " + name + " —— COM 兜底亦失败（" + reason + "），重试常规通道一次");
 								try { if (File.Exists(pdfPath)) File.Delete(pdfPath); } catch { }
-								ok = plotter.Plot(useAccoreSetup ? src : copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
+								// v4.16（2026-10-07，安全修复，依据 TRAE 实测 R7）：**始终把副本交给 accoreconsole**。
+// 原代码是 `useAccoreSetup ? src : copyPath` —— accore 模式下把**源图原件**直接交给
+// accoreconsole，而出图脚本会对 Model 布局做 entmod（页面设置 / 组码 76 等）。
+// AutoCAD 的自动保存与崩溃恢复会把这种就地打开的图**写回源文件**。
+// 实测后果：`打印问题文件` 里 8 张源图的 mtime 全部集中在同一分钟，其中 3 张
+// （7633639/ 7633640 / 7643423）**内容 MD5 被改写** —— 违反"不得改变图纸内容"的硬约束。
+// 现在两条通道统一用 copyPath，源图只被读取（图框识别仍读源，见FrameExtractor），
+// 任何写回都只会落在临时目录的副本上。
+// 代价：副本在临时目录，图纸里的 Xref 相对路径可能解析不到；出图只用 extents/窗口，
+// 实测 40 张公司版 + 8 张 PISCES 均不受影响（若将来有 Xref 依赖图纸需另做相对路径重定向）。
+							ok = plotter.Plot(copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
 							}
 							// v4.3：COM 兜底后也用多元化质量审查（文件大小 + MediaBox + 内容流）
 							// v4.6：ps 可能为 null（无图框/无副本的文件走 COM 兜底成功时）——

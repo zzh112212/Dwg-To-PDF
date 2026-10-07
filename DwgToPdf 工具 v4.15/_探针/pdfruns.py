@@ -170,23 +170,64 @@ def _ink_and_runs(t):
             "ink_mean_darkness": 255.0 - mean, "runs": runs}
 
 
-def _vector_widths(data):
-    """Line widths used by vector output (the `w` operator), in PDF points."""
+def _paint_ops(data):
+    """Count path/paint operators, so we can tell stroked output from filled output.
+
+    MEASURED 2026-10-07: helpful for sanity-checking that geometry is vector at all.
+    The `S` count barely moves between lineweights on/off, which rules out the
+    "thick lines become filled quadrangles" guess - see _stroke_widths for what
+    actually differs (the line width carried in the graphics state).
+    """
     txt = _content(data).decode("latin-1", "replace")
-    vals = {}
-    for m in re.finditer(r"(" + NUM + r")\s+w(?![a-zA-Z])", txt):
-        try:
-            v = float(m.group(1))
-        except ValueError:
-            continue
-        # MEASURED 2026-10-07: the old filter `0 < v < 20` dropped every hairline stroke,
-        # so a page whose strokes are ALL `0 w` reported "line widths = none". That was
-        # read as "the vector writer never set a width", when the truth is "every stroke
-        # was flattened to hairline" - the two are opposites. Keep 0 in the histogram.
-        if 0 <= v < 20:
-            k = "%.3f" % v
-            vals[k] = vals.get(k, 0) + 1
-    return vals
+    ops = {}
+    for name in ("S", "s", "f", "F", "f*", "B", "B*", "b", "b*", "n", "re", "m", "l", "c", "W"):
+        pat = r"(?<![A-Za-z*])" + re.escape(name) + r"(?![A-Za-z*])"
+        ops[name] = len(re.findall(pat, txt))
+    return ops
+
+
+def _stroke_widths(data):
+    """Effective line width of every stroked path, in PDF points.
+
+    MEASURED 2026-10-07 (this replaces a misleading metric):
+        The previous version counted `w` OPERATOR occurrences. That is not the
+        same thing as "how wide are the strokes", because PDF line width is
+        graphics state: AutoCAD emits `6 w` ONCE and thousands of subsequent
+        `S` calls inherit it. Counting operators made the lineweights-on page
+        look like "only 294 strokes have a width", when in truth 9,967 of its
+        13,290 strokes are drawn at 6pt (= 0.25mm on paper, the AutoCAD default
+        lineweight). Meanwhile the lineweights-off page sets `0 w` before every
+        single stroke, so it reported 13,843 - and it really is all hairline.
+
+    So: walk the stream in order, remember the current width (PDF default 1.0),
+    and attribute it to each `S` (stroke). That histogram is the honest one.
+
+    Note the scale: the content stream starts with `0.12 0 0 0.12 0 0 cm`, so
+    6pt here is 0.72pt / 0.254mm on paper.
+    """
+    txt = _content(data).decode("latin-1", "replace")
+    cur = 1.0
+    hist = {}
+    strokes = 0
+    for m in re.finditer(r"(?:(?<![A-Za-z*])(" + NUM + r")\s+w(?![A-Za-z*]))"
+                         r"|(?:(?<![A-Za-z*])S(?![A-Za-z*]))", txt):
+        if m.group(1) is not None:
+            try:
+                cur = float(m.group(1))
+            except ValueError:
+                pass
+        else:
+            strokes += 1
+            if 0 <= cur < 20:
+                k = "%.3f" % cur
+                hist[k] = hist.get(k, 0) + 1
+    return hist, strokes
+
+
+def _w_ops(data):
+    """Raw count of `w` operators - kept only to show the driver's emit style."""
+    txt = _content(data).decode("latin-1", "replace")
+    return len(re.findall(r"(?<![A-Za-z*])" + NUM + r"\s+w(?![A-Za-z*])", txt))
 
 
 def report(path):
@@ -204,9 +245,13 @@ def report(path):
 
     content = _content(data)
     imgs = [b for b in _objects(data) if re.search(rb"/Subtype\s*/Image", b)]
-    vw = _vector_widths(data)
-    print("   vector content=%dB   image tiles=%d   vector line widths(pt)=%s"
-          % (len(content), len(imgs), (sorted(vw.items(), key=lambda kv: -kv[1])[:6] or "none")))
+    sw, strokes = _stroke_widths(data)
+    print("   vector content=%dB   image tiles=%d   strokes=%d   stroke width/pt=%s   (w-ops=%d)"
+          % (len(content), len(imgs), strokes,
+             (sorted(sw.items(), key=lambda kv: -kv[1])[:6] or "none"), _w_ops(data)))
+    ops = _paint_ops(data)
+    print("   paint: " + "  ".join("%s=%d" % (k, ops[k]) for k in ("S", "f", "B", "n", "re", "m", "l", "c")
+                                   if ops.get(k)))
 
     t = _first_image(data)
     if not t:
