@@ -1,0 +1,93 @@
+2026-10-06 16:01:54.736  [信息]  程序启动
+2026-10-06 16:01:54.750  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 16:02:28.360  [信息]  运行开始：输入=文件清单 8 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 16:04:08.988  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+2026-10-06 16:04:09.424  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 16:04:11.742  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+2026-10-06 16:04:15.096  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 16:04:16.432  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+2026-10-06 16:04:18.060  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 16:04:23.864  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+2026-10-06 16:04:32.476  [信息]  运行完成：成功=7，失败=0，取消=0，用时=124.1 秒
+2026-10-06 16:13:08.320  [信息]  程序正常退出
+2026-10-06 16:41:19.207  [信息]  程序启动
+2026-10-06 16:41:19.220  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 16:41:48.016  [信息]  程序正常退出
+2026-10-06 16:57:42.566  [信息]  程序启动
+2026-10-06 16:57:42.579  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 16:58:27.922  [信息]  运行开始：输入=文件清单 8 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 17:00:38.881  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 17:00:39.125  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+2026-10-06 17:00:44.433  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+2026-10-06 17:00:47.032  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 17:00:47.592  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+2026-10-06 17:00:51.058  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 17:00:59.714  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+2026-10-06 17:03:22.822  [信息]  运行完成：成功=7，失败=0，取消=0，用时=294.9 秒
+2026-10-06 17:33:00.713  [信息]  程序正常退出
+2026-10-06 18:04:38.625  [信息]  程序启动
+2026-10-06 18:04:38.640  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 18:05:08.969  [信息]  运行开始：输入=文件清单 8 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 18:06:54.988  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+2026-10-06 18:06:55.876  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 18:06:57.209  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+2026-10-06 18:06:59.641  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 18:07:02.186  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+2026-10-06 18:07:03.071  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 18:07:07.635  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+2026-10-06 18:07:11.218  [信息]  运行完成：成功=7，失败=0，取消=0，用时=122.3 秒
+2026-10-06 18:11:22.099  [信息]  程序正常退出
+2026-10-06 18:43:05.579  [信息]  程序启动
+2026-10-06 18:43:05.593  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 18:43:21.266  [信息]  运行开始：输入=文件清单 8 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 18:45:04.206  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+2026-10-06 18:45:18.407  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 18:45:18.902  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+2026-10-06 18:45:22.318  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 18:45:27.399  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+2026-10-06 18:45:28.083  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 18:45:34.238  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+2026-10-06 18:47:39.420  [信息]  运行完成：成功=7，失败=0，取消=0，用时=258.2 秒
+2026-10-06 18:54:19.676  [信息]  程序正常退出
+2026-10-06 19:54:46.423  [信息]  程序启动
+2026-10-06 19:54:46.437  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 19:55:05.998  [信息]  运行开始：输入=文件清单 8 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 19:56:15.986  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+2026-10-06 19:56:29.139  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 19:56:53.256  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+2026-10-06 19:57:07.156  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+2026-10-06 19:58:17.429  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 19:58:32.527  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 19:59:02.522  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807743-AC_LD001APIA3_副驾按摩腰托总成_临时图纸.dwg
+2026-10-06 19:59:31.712  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+2026-10-06 19:59:57.289  [信息]  运行完成：成功=8，失败=0，取消=0，用时=291.3 秒
+2026-10-06 20:01:04.460  [信息]  程序正常退出
+2026-10-06 20:10:52.851  [信息]  程序启动
+2026-10-06 20:10:52.865  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 20:11:11.138  [信息]  运行开始：输入=文件清单 8 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 20:12:19.061  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+2026-10-06 20:12:39.159  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 20:13:02.335  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+2026-10-06 20:13:33.025  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+2026-10-06 20:14:37.020  [信息]  成功  E:\钉钉下载\DWG\PISCES_7807743-AC_LD001APIA3_副驾按摩腰托总成_临时图纸.dwg
+2026-10-06 20:14:50.332  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 20:15:02.637  [信息]  已停止  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg —— 已停止
+2026-10-06 20:15:02.946  [信息]  失败  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg —— 出图 7/8（失败：远程过程调用失败。 (异常来自 HRESULT:0x800706BE)）
+2026-10-06 20:15:06.193  [信息]  运行已停止：成功=6，失败=1，取消=1，用时=235.1 秒
+2026-10-06 20:15:08.475  [信息]  程序正常退出
+2026-10-06 20:35:30.704  [信息]  程序启动
+2026-10-06 20:35:30.718  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 20:35:50.886  [信息]  运行开始：输入=文件清单 1 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 20:36:48.878  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 20:37:13.582  [信息]  运行完成：成功=1，失败=0，取消=0，用时=82.7 秒
+2026-10-06 20:44:39.060  [信息]  程序正常退出
+2026-10-06 22:11:29.515  [信息]  程序启动
+2026-10-06 22:11:29.534  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-06 22:12:08.785  [信息]  运行开始：输入=文件清单 4 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 22:13:16.656  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-06 22:13:35.068  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+2026-10-06 22:13:56.436  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+2026-10-06 22:14:12.120  [信息]  成功  E:\钉钉下载\DWG\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+2026-10-06 22:16:53.321  [信息]  运行完成：成功=4，失败=0，取消=0，用时=284.5 秒
+2026-10-06 22:28:03.105  [信息]  运行开始：输入=文件清单 4 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-06 22:28:31.175  [信息]  程序正常退出

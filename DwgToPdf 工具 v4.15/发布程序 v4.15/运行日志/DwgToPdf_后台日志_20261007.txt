@@ -1,0 +1,15 @@
+2026-10-07 00:47:29.984  [信息]  程序启动
+2026-10-07 00:47:29.998  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-07 00:48:09.779  [信息]  运行开始：输入=文件清单 1 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-07 00:49:03.652  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-07 00:49:06.933  [信息]  运行完成：成功=1，失败=0，取消=0，用时=57.2 秒
+2026-10-07 00:49:38.797  [信息]  程序正常退出
+2026-10-07 00:51:17.500  [信息]  程序启动
+2026-10-07 00:51:17.513  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-07 00:51:41.506  [信息]  运行开始：输入=文件清单 1 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
+2026-10-07 00:52:53.829  [信息]  成功  E:\钉钉下载\DWG\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+2026-10-07 00:53:12.512  [信息]  运行完成：成功=1，失败=0，取消=0，用时=91 秒
+2026-10-07 00:53:44.505  [信息]  程序正常退出
+2026-10-07 15:51:32.094  [信息]  程序启动
+2026-10-07 15:51:32.117  [信息]  —— 环境信息 —— ⏎ 操作系统: Microsoft Windows NT 6.2.9200.0 (64位) ⏎ .NET: 4.0.30319.42000 ⏎ 程序路径: E:\TRAE工作文件夹\DWG TO PDF\DwgToPdf 工具 v4.15\发布程序 v4.15\DwgToPdf.exe ⏎ AutoCAD COM 注册(AutoCAD.Application 脚本ID): 已检测到 ⏎ 已有 AutoCAD 实例在运行: 否 ⏎ 注册表中的 AutoCAD 版本: ⏎ HKLM\SOFTWARE\Autodesk\AutoCAD\R25.1 ⏎   HKCU\Software\Autodesk\AutoCAD\R24.0 ⏎   HKCU\Software\Autodesk\AutoCAD\R25.1 ⏎ AutoCAD Core Console(accoreconsole.exe): D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+2026-10-07 15:53:14.673  [信息]  运行开始：输入=文件清单 4 个 ⏎ 输出=C:\Users\29593\Desktop\12334 ⏎ 贴边=False，并发调度=CPU 自适应，含子目录=False
