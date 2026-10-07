@@ -44,18 +44,27 @@ internal static class PrintQuality
     public static bool UseRasterBoost(int rasterCount, int rasterMissing, int rasterDpi)
         => rasterCount > 0 && rasterMissing == 0 && rasterDpi > 0;
 
-    /// <summary>dwg 文件是否超过高质量阈值（&gt;threshold 走 HQ pc3）。
-    /// threshold &lt; 0 时用默认阈值（PrintOptions.HighQualityThresholdBytes 或静态兜底）。</summary>
-    public static bool IsHighQuality(string dwgPath, long thresholdBytes = -1)
-    {
-        long t = thresholdBytes >= 0 ? thresholdBytes : ThresholdBytes;
-        try { return new FileInfo(dwgPath).Length > t; }
-        catch { return false; }
-    }
+    /// <summary>dwg 文件是否应走"高质量(HQ) pc3"。
+    ///
+    /// v4.16（2026-10-07，用户实测反馈"PISCES 这批用默认 pc3 效果和速度都比 HQ.pc3 好"）
+    /// —— **本功能已停用，恒返回 false**。停用依据（可复现，40 张公司版 + 8 张 PISCES 实测）：
+    ///   · 凡是 dwg &gt; 1MB（旧阈值 HighQualityThresholdBytes）走 HQ pc3 的产物，
+    ///     **全部是整页光栅**（2A0 的 PISCES 120 个图块铺满 441840x1080px @393dpi；
+    ///     4A0 的 Y1563451/3453 各 7 个图块）；
+    ///   · 凡是 &lt; 1MB 走标准 DWG To PDF.pc3 的产物，除含内嵌位图的几张外**全是矢量**
+    ///     （矢量内容流 0.79~1.81MB、0~1 个图块），覆盖 A2/A1/A0/2A0/4A0 各种幅面。
+    ///   · 同一张 2A0 图纸：HQ → 120 图块整页光栅（线条被烘进位图，视觉"发浅"）；
+    ///     标准 pc3 → 矢量。这正是用户手工打印"按显示"（矢量 3.2MB 路径数据）正常的解释。
+    ///   · 速度：用户 16:01 / 16:08 / 16:12 连跑同 4 张，耗时 93.7s / **450.9s** / 217.1s，
+    ///     5 倍波动对应是否落在 HQ 路径上。
+    /// 结论：HQ pc3 对本项目是**负优化**，改为恒false；阈值参数与设置项一并退役
+    /// （见 SettingsForm / AppSettings / PrintOptions 中的同步修改）。
+    /// 保留本方法签名是为了不破坏既有调用点（ConverterEngine.Plot.cs 3 处、
+    /// PageSetupPreprocessor 1 处），它们继续传阈值进来但不再被使用。</summary>
+    public static bool IsHighQuality(string dwgPath, long thresholdBytes = -1) => false;
 
-    /// <summary>按文件大小选择 pc3 设备名（&gt;阈值=HQ pc3，否则标准 DWG To PDF.pc3）。</summary>
-    public static string PlotterFor(string dwgPath, long thresholdBytes = -1)
-        => IsHighQuality(dwgPath, thresholdBytes) ? HighQualityPlotterName : StandardPlotterName;
+    /// <summary>按文件大小选择 pc3 设备名。v4.16 起恒为标准 DWG TO PDF.pc3（HQ 已停用，见上）。</summary>
+    public static string PlotterFor(string dwgPath, long thresholdBytes = -1) => StandardPlotterName;
 
     /// <summary>媒体名映射：HQ pc3 与标准 pc3 的媒体名不一致时在此转换；默认恒等透传。</summary>
     public static string MapMedia(bool highQuality, string fullBleedMedia)

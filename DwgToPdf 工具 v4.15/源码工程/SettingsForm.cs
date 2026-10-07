@@ -33,7 +33,7 @@ public class SettingsForm : Form
     private NumericUpDown _numConvertTimeoutSec;
     // （v4.15 修订：原 _numHQThreshold"大于1MB采用HQ"设置已删除——HQ 设备为负优化，见手册第28章）
     // v4.3：高质量打印阈值（MB，NumericUpDown）
-    private NumericUpDown _numHQThreshold;
+    // v4.16：_numHQThreshold 控件已随设置项一并删除（HQ 停用，见上方注释）
     // v4.15：含光栅图片图纸的高清出图 dpi（下拉，索引对应 PrintQuality.RasterDpiChoices）
     private ComboBox _cmbRasterDpi;
 
@@ -266,32 +266,21 @@ public class SettingsForm : Form
         layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));  // 9 说明
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // 10 填充
 
-        // v4.3 / v4.15：高质量打印阈值（>该值用 HQ pc3，默认 1MB；可在「设置」中覆盖）
+        // v4.16（2026-10-07）：原"dwg 大于多少 MB 采用高质量打印"设置项**已删除**。
+        // 依据：HQ pc3（AutoCAD PDF (High Quality Print).pc3）实测为负优化 ——
+        //   · 凡 dwg>1MB 走 HQ 的产物全部整页光栅（2A0 PISCES 120 图块@393dpi）；
+        //   · <1MB 走标准 DWG TO PDF.pc3 的产物除含内嵌位图者外全是矢量；
+        //   · 效果变差（同图标准 pc3 出矢量、HQ 出光栅发浅）+ 速度慢 5 倍。
+        // 见 PrintQuality.IsHighQuality 的注释与《经验手册》第28章。
+        // 该行原本占 layout 的第 0 行；保留一个占位提示，避免后续行的row index 全部平移。
         layout.Controls.Add(new Label
         {
-            Text = "dwg 大于多少 MB 采用高质量打印：",
+            Text = "高质量打印：已停用（固定使用 DWG TO PDF.pc3，矢量输出）",
             Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleLeft
-        }, 0, 0);
-        _numHQThreshold = new NumericUpDown
-        {
-            Dock = DockStyle.Left,
-            Width = 120,
-            Minimum = 0.1m,
-            Maximum = 1000m,
-            DecimalPlaces = 2,
-            Increment = 0.5m,
-            Value = 1.0m
-        };
-        layout.Controls.Add(_numHQThreshold, 1, 0);
-
-        layout.Controls.Add(new Label
-        {
-            Text = ">该值用 AutoCAD PDF High Quality Print (HQ)，默认 DWG TO PDF。",
-            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleLeft,
             ForeColor = Color.Gray
-        }, 0, 1);
-        layout.SetColumnSpan(layout.GetControlFromPosition(0, 1), 2);
+        }, 0, 0);
+        layout.SetColumnSpan(layout.GetControlFromPosition(0, 0), 2);
 
         layout.Controls.Add(new Label
         {
@@ -419,9 +408,7 @@ public class SettingsForm : Form
         {
             foreach (var n in s.ExtraBlockNames) _lstBlocks.Items.Add(n);
         }
-        // MB 显示（同样夹紧，防越界）
-        decimal hqMb = (decimal)((double)s.HighQualityThresholdBytes / 1024.0 / 1024.0);
-        _numHQThreshold.Value = Math.Max(_numHQThreshold.Minimum, Math.Min(_numHQThreshold.Maximum, hqMb));
+        // v4.16：HQ 阈值控件已删除，不再回填（HQ pc3 为负优化，见 PrintQuality.IsHighQuality）
         _cmbPdfLayout.SelectedIndex = s.PdfFlatOutput ? 1 : 0;
         // v4.8：大文件阈值（MB 显示，夹紧防越界）
         decimal skipMb = (decimal)((double)Math.Max(0, s.MaxDwgSizeBytes) / 1024.0 / 1024.0);
@@ -442,7 +429,7 @@ public class SettingsForm : Form
             QualityMinFileSizeBytes = (int)_numMinFileSize.Value * 1024,
             ExtraBlockNames = _lstBlocks.Items.Cast<string>()
                 .Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
-            HighQualityThresholdBytes = (long)(_numHQThreshold.Value * 1024m * 1024m),
+            // v4.16：HighQualityThresholdBytes 已退役（保留属性仅为兼容旧配置读回）
             PdfFlatOutput = _cmbPdfLayout.SelectedIndex == 1,
             // v4.8：大文件阈值（0=不限制；v4.12 起=超过则退回待转换）
             MaxDwgSizeBytes = (long)(_numSkipLargeMb.Value * 1024m * 1024m),

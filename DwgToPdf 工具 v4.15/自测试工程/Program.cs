@@ -876,7 +876,11 @@ namespace DwgToPdf.SelfTest
             try
             {
                 System.IO.File.WriteAllBytes(tmp, new byte[1024 * 1024 + 1]);   // >1MB
-                Assertion.True(DwgToPdf.Batch.PrintQuality.PlotterFor(tmp, 1048576) == DwgToPdf.Batch.PrintQuality.HighQualityPlotterName, "large file -> HQ pc3");
+                // v4.16：HQ pc3 已停用（实测为负优化，见手册第28章）。原断言"大文件 -> HQ pc3"
+                // 编码的是已废弃的行为：它曾让所有 >1MB 的图纸整页光栅化、慢 5 倍。
+                // 现在无论文件多大都固定用标准 DWG TO PDF.pc3（矢量输出）。
+                Assertion.True(DwgToPdf.Batch.PrintQuality.PlotterFor(tmp, 1048576) == DwgToPdf.Batch.PrintQuality.StandardPlotterName, "large file -> standard pc3 (HQ retired v4.16)");
+                Assertion.True(!DwgToPdf.Batch.PrintQuality.IsHighQuality(tmp, 1048576), "IsHighQuality always false (v4.16)");
                 System.IO.File.WriteAllBytes(tmp, new byte[1024]);              // <1MB
                 Assertion.True(DwgToPdf.Batch.PrintQuality.PlotterFor(tmp, 1048576) == DwgToPdf.Batch.PrintQuality.StandardPlotterName, "small file -> standard pc3");
             }
