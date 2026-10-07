@@ -11,6 +11,25 @@ namespace DwgToPdf.Batch;
 // / RunComOnly（整批回退 COM 编排）/ WorkerLoop（v2.3.1 COM 出图轮询）
 internal sealed partial class ConverterEngine
 {
+	/// <summary>
+	/// v4.16：组码 76（着色打印）→ AutoCAD 界面上的名称。实测锚点见《经验手册》第29章 / handoff §17.1
+	/// （TRAE 用 computer-use 插件读 PLOT 对话框，AutoCAD 2026 简体中文）：
+	///   0 = **按显示**（矢量，含 6.000pt 真实线宽）
+	///   3 = **渲染**（整页光栅）
+	///   4 = **着色**（整页高分辨率位图）—— 本批问题图纸就是这个值
+	/// 1 / 2 **没有界面实测名**：下拉列表里没有对应项（属"组合框可持有的状态"），
+	/// 因此只报数字、**不硬编名字** —— 编一个错名字会让日志把后续排查引向错误方向。
+	/// </summary>
+	private static string ShadePlotName(int g76)
+	{
+		switch (g76)
+		{
+			case 0: return "按显示";
+			case 3: return "渲染";
+			case 4: return "着色";
+			default: return g76.ToString();   // 1 / 2 及其它：按列表序推断，未经实测
+		}
+	}
 	// v4.12：删除"长时转换提醒"（原 v4.8 需求③ StartSlowRemind + SlowRemindSeconds 设置项）——
 	// 用户反馈该提醒无实际价值，改为不提醒（超时/慢文件仍可在日志头部看到耗时统计）。
 
@@ -129,7 +148,7 @@ internal sealed partial class ConverterEngine
 							// v4.15：真光栅 IMAGE 数 / 其中外部图缺失数——增强出图只对真光栅且无缺失图启用
 							RasterCount = entry.RasterCount,
 							RasterMissingCount = entry.RasterMissingCount,
-							G76 = entry.G76,                 // v4.16：Model 布局着色打印组码 76（≠0 → 改走 COM）
+							G76 = entry.G76,                 // v4.16：Model 布局着色打印组码 76（≥3 光栅模式 → 改走 COM）
 						};
 						ps = PageSpec.Resolve(box.Width, box.Height, marginMm);
 						landscape = box.Width >= box.Height;
@@ -158,15 +177,20 @@ internal sealed partial class ConverterEngine
 									log.WriteLine("[提示] 高清打印配置生成失败（" + qWhy + "），含图片图纸按普通方式出图");
 								}
 							}
-							// v4.16（2026-10-07，"打印发浅"缺口③）：着色打印≠按显示（Model 布局组码 76≠0）的
-							// 图纸也改走 COM —— accore 的 -EXPORT 不认布局组码 70 的 0x80(打印线宽)，
+							// v4.16（2026-10-07，"打印发浅"缺口③）：着色打印=光栅模式（Model 布局组码 76≥3）
+							// 的图纸改走 COM —— accore 的 -EXPORT 不认布局组码 70 的 0x80(打印线宽)，
 							// 其产物线条全是 hairline（视觉"发浅"）；COM 通道能同时写 0x80(线宽) 与
 							// 76=0(按显示，防整页光栅)。
-							// 判定用识别阶段回读的 box.G76（Model 布局组码 76=着色打印）：
-							// g76≠0 即"渲染"——accore 的 -EXPORT 会把整页按渲染光栅化，线条被
-							// 烘成位图 → 视觉"打印发浅"（用户 8 张问题图纸 8/8 命中 g76=4，
-							// 12 张对照图纸 0/12 命中）。此前用 box.ImageCount 判定不可靠：
-							// lsp 的 IMG|n 实测**不含 OLE2FRAME**（7643423 的 img=0 但产物有 9 块图像）。
+							// 判定用识别阶段回读的 box.G76（Model 布局组码 76=着色打印）。
+							// 阈值取 **≥3** 有实测依据（探针 7807758 逐值扫描 + 52 张语料）：
+							//   76=0 → 矢量 1.9MB / 13,111 描边（与 76=1 **指标完全相同**，含 6.000pt 真实线宽）
+							//   76=2 → 全矢量 9.1MB（非光栅，不判）
+							//   76=3 → 内容流仅 4,346B + 20 块大光栅（整页光栅化）
+							//   76=4 → 整页高分辨率位图
+							// 语料命中：8 张问题图纸 Model=4（8/8 命中）；12 张对照 Model=0（11 张）或 =1（17 号 H77，
+							// 实测 1 与 0 产物指标一致 ⇒ 不该判）；40 张公司模板（H56E）全 0 ⇒ 零误伤。
+							// 此前用 box.ImageCount 判定不可靠：lsp 的 IMG|n 实测**不含 OLE2FRAME**
+							// （7643423 的 img=0 但产物有 9 块图像）。
 							// 真光栅且无缺图的图纸已由上面的 UseRasterBoost 覆盖；缺外部图的图纸
 							// 排除（v4.15：COM 会输出空白页）。
 							if (qualityPc3 != null)
@@ -174,18 +198,18 @@ internal sealed partial class ConverterEngine
 								ok = false;                     // 不跑 accore，直接走下方 COM 分支（带高清 pc3）
 								reason = "含光栅图片：改用 COM 高清出图";
 							}
-							else if (box.G76 != 0 && !NoComFallback)
+							else if (box.G76 >= 3 && !NoComFallback)
 							{
 								ok = false;                     // 同上：改走下方 COM 分支（标准 pc3）
-								reason = "布局着色打印=渲染(组码 76=" + box.G76 + ")：改用 COM 出图（accore 不输出线宽，且易整页光栅→发浅）";
-								// v4.16（用户 2026-10-07 决策：修复范围只覆盖着色打印≠按显示的图纸，
+								reason = "布局着色打印=" + ShadePlotName(box.G76) + "(组码 76=" + box.G76 + ")：改用 COM 出图（accore 不输出线宽，且易整页光栅→发浅）";
+								// v4.16（用户 2026-10-07 决策：修复范围只覆盖着色打印=光栅模式的图纸，
 								// 不动全局"显示线宽"默认值）——这张图单独强制开线宽，
 								// 免得用户必须手动勾"显示线宽"才有效果。
 								forceComLineweight = true;
 								if (!_imageComLogged)
 								{
 									_imageComLogged = true;
-									log.WriteLine("[信息] 布局着色打印=渲染(组码 76=" + box.G76 + ")的图纸改用 COM 出图"
+									log.WriteLine("[信息] 布局着色打印=" + ShadePlotName(box.G76) + "(组码 76=" + box.G76 + ")的图纸改用 COM 出图"
 										+ "（accore 的 -EXPORT 不输出线宽，且易整页光栅→发浅）");
 								}
 							}

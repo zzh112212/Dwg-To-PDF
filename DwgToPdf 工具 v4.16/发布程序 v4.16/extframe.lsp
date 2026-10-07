@@ -416,7 +416,7 @@
      (setq v49-bdefcache (cons (cons bname box) v49-bdefcache))
      box)))
 
-(defun extframe (outfile blockMode extraBlocks / fp ss i n ent d t0 layer box layers any legacy best bmax area score bname ins sX sY sub-box bb closed forced gbox vlines hlines prects rect4 rect4line rect4outline rect4take rect4outtake cand emn emx rect4src bseen bdef wbox bhit be bname2 bbox2 resbox reslay ressrc p1 p2 verts flag bx ok dx dy v imgn imge imgbad id de pp si k kn p)
+(defun extframe (outfile blockMode extraBlocks / fp ss i n ent d t0 layer box layers any legacy best bmax area score bname ins sX sY sub-box bb closed forced gbox vlines hlines prects rect4 rect4line rect4outline rect4take rect4outtake cand emn emx rect4src bseen bdef wbox bhit be bname2 bbox2 resbox reslay ressrc p1 p2 verts flag bx ok dx dy v imgn imge imgbad id de pp si k kn p lo le g76)
   (setvar "CMDECHO" 0)
   (setq fp (open outfile "w"))
   (setq ss (ssget "_X" (list (cons 410 "Model"))))
@@ -582,6 +582,17 @@
     (setq imgn (+ imgn (sslength si))))
   (if fp (princ (strcat "IMG|" (itoa imgn) "\n") fp))
   (if fp (princ (strcat "IMGR|" (itoa imge) "|" (itoa imgbad) "\n") fp))
+  ; v4.16 Model layout shade-plot (DXF group 76). Missing/nil -> 0. Never errors.
+  (setq g76 (vl-catch-all-apply '(lambda ()
+    (progn
+      (setq lo (cdr (assoc 350 (member (cons 3 "Model") (dictsearch (namedobjdict) "ACAD_LAYOUT")))))
+      (if lo
+        (progn
+          (setq le (entget lo))
+          (if (assoc 76 le) (cdr (assoc 76 le)) 0))
+        0)))))
+  (if (or (vl-catch-all-error-p g76) (null g76) (/= (type g76) 'INT)) (setq g76 0))
+  (if fp (princ (strcat "G76|" (itoa g76) "\n") fp))
   ; v4.12 修订：先统一算出 结果盒/结果层/结果来源（便于后面做完整性修正）
   (setq resbox nil reslay nil ressrc nil)
   (cond

@@ -19,8 +19,50 @@ namespace DwgToPdf.SelfTest
 
     public static class Program
     {
+        /// <summary>
+        /// v4.16（2026-10-07，用户批准）：校验「引擎新鲜度」，把"SelfTest 没重编 ⇒ 回归假绿"变成显式失败。
+        ///
+        /// 为什么需要：<c>SelfTest.csproj</c> 用 <c>&lt;Compile Include="..\源码工程\*.cs"&gt;</c>
+        /// **直接引用引擎源码**，所以 <c>SelfTest.exe</c> 是一份**独立的编译产物**（内含引擎源码副本），
+        /// 而**不是**引用主工程 exe。于是：
+        ///   改了 ConverterEngine*.cs → 只编了主工程、没编 SelfTest ⇒ SelfTest 里仍是**旧引擎**，
+        ///   但断言会**全部通过** —— 这比"失败"危险得多（假绿）。
+        /// 判定规则：主工程 exe 的最后写入时间**晚于** SelfTest.exe ⇒ SelfTest 装的是旧引擎 ⇒ FAIL。
+        /// 反之（SelfTest 更新，或本来就只编了 SelfTest）⇒ PASS。
+        /// 找不到主工程 exe ⇒ 跳过，不判失败。
+        ///
+        /// 修复办法：<c>dotnet build 自测试工程\SelfTest.csproj -c Release</c>
+        /// </summary>
+        private static void CheckEngineFreshness()
+        {
+            try
+            {
+                string selfDir = AppDomain.CurrentDomain.BaseDirectory;
+                string selfExe = System.IO.Path.Combine(selfDir, "SelfTest.exe");
+                // 向上寻找同时含"源码工程"的目录：不把层级写死，目录结构调整后不会静默失效
+                System.IO.DirectoryInfo root = new System.IO.DirectoryInfo(selfDir);
+                while (root != null && !System.IO.Directory.Exists(System.IO.Path.Combine(root.FullName, "源码工程")))
+                    root = root.Parent;
+                if (root == null) { Console.WriteLine("[跳过] 找不到源码工程目录，无法校验引擎新鲜度"); return; }
+                string mainExe = System.IO.Path.Combine(root.FullName, "源码工程", "bin", "Release", "net48", "DwgToPdf.exe");
+                if (!System.IO.File.Exists(mainExe))
+                { Console.WriteLine("[跳过] 未找到主工程 exe（DwgToPdf.exe），无法校验引擎新鲜度"); return; }
+                DateTime tSelf = System.IO.File.GetLastWriteTime(selfExe);
+                DateTime tMain = System.IO.File.GetLastWriteTime(mainExe);
+                Assertion.True(tMain <= tSelf,
+                    "引擎新鲜度：SelfTest 不早于主工程 exe（否则回归跑的是旧引擎 = 假绿）",
+                    "SelfTest=" + tSelf.ToString("yyyy-MM-dd HH:mm:ss")
+                    + "  DwgToPdf.exe=" + tMain.ToString("yyyy-MM-dd HH:mm:ss")
+                    + "  → 请重新编译：dotnet build 自测试工程\\SelfTest.csproj -c Release");
+            }
+            catch (Exception ex) { Console.WriteLine("[跳过] 引擎新鲜度检查异常：" + ex.Message); }
+        }
+
         public static int Main(string[] args)
         {
+            // v4.16：任何分支跑之前先校验引擎新鲜度（秒级、只读文件系统）。
+            // 放在最前面是有意的 —— 假绿必须**在第一行**就暴露，而不是等跑完 40 张才发现。
+            CheckEngineFreshness();
             if (args.Length > 0 && args[0] == "--probe-hq-media") { var t = new System.Threading.Thread(RunProbeHqMedia); t.SetApartmentState(System.Threading.ApartmentState.STA); t.Start(); t.Join(); return Assertion.ExitCode(); }
             if (args.Length > 0 && args[0] == "--extract-smoke")
             {

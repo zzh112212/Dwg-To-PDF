@@ -17,7 +17,7 @@
     (if (and (>= (car g) 10) (<= (car g) 14))
       (setq r (cons (cdr g) r))))
   r)
-(defun extframe-company (outfile / fp ss i n e d lay box best imgn imge imgbad id de pp si k kn p)
+(defun extframe-company (outfile / fp ss i n e d lay box best imgn imge imgbad id de pp si k kn p lo le g76)
   (setvar "CMDECHO" 0)
   (setq fp (open outfile "w"))
   (setq ss (ssget "_X" (list (cons 0 "LWPOLYLINE"))))
@@ -70,5 +70,16 @@
     (setq imgn (+ imgn (sslength si))))
   (if fp (princ (strcat "IMG|" (itoa imgn) "\n") fp))
     (if fp (princ (strcat "IMGR|" (itoa imge) "|" (itoa imgbad) "\n") fp))
+  ; v4.16 Model layout shade-plot (DXF group 76). Missing/nil -> 0. Never errors.
+  (setq g76 (vl-catch-all-apply '(lambda ()
+    (progn
+      (setq lo (cdr (assoc 350 (member (cons 3 "Model") (dictsearch (namedobjdict) "ACAD_LAYOUT")))))
+      (if lo
+        (progn
+          (setq le (entget lo))
+          (if (assoc 76 le) (cdr (assoc 76 le)) 0))
+        0)))))
+  (if (or (vl-catch-all-error-p g76) (null g76) (/= (type g76) 'INT)) (setq g76 0))
+  (if fp (princ (strcat "G76|" (itoa g76) "\n") fp))
   (if fp (close fp))
   (princ))

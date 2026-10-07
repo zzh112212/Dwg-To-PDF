@@ -22,7 +22,11 @@ out\guiplot\         本轮对照产物（证据）
   PISCES_7758_g76_3_RASTER.pdf   组码 76=3（渲染）  → 光栅
 
 结论速记：布局记录 AcDbPlotSettings 段组码 76 是"着色打印"，
-   4（着色）/3（渲染）= 整页光栅（发浅）；0（按显示）/1 = 矢量线宽层次保留。
+   4（着色）/3（渲染）= 整页光栅（发浅）；0（按显示）/1（线框）= 矢量线宽层次保留。
+   ⚠ 实测口径补充（2026-10-07 深夜，逐值扫描 7807758）：**76=1 与 76=0 的产物指标完全相同**
+   （内容流 1,906,648 B、13,111 描边、6.000pt×9,776 真实线宽、16 块 30×29px 小图），
+   76=2 是全矢量（非光栅）；⇒ 判定阈值取 **≥3**（工具里就是这么写的）。
+   ⚠ 多布局文件有 3 个 76 值（Model/布局1/布局2）——**口径固定为 Model 布局**，否则命中率会漂移。
    注意：AcDbLayout 段的组码 146 是"标高"，不是着色打印（旧文档标注有误）。
 
 二、既有探针（本轮之前）
@@ -34,7 +38,13 @@ run_plotcfg.ps1 / run_plotvars.ps1   页面设置/打印变量对照
 run_ole.ps1                          OLE2FRAME 相关探测
 check_corpus.ps1 + 语料基线.txt       全量回归基线
 pdfruns.py                           PDF 判据：矢量内容流、光栅图块数、解码后的墨量/线宽
-pdfink.py                            早期墨量统计（有误，须先解 /Predictor 15，见手册第28章）
+                                    （**每条描边的有效线宽**直方图 —— 不要数"w 算子出现次数"，
+                                     PDF 线宽是图形状态，写一次 `6 w` 会被后面几千条 `S` 继承）
+pdfink.py                           渲染墨量（PyMuPDF 渲染成灰度图，量 平均墨量/255 与 ink<128 占比）
+                                    —— "深浅"的量化主指标；例：python pdfink.py --dpi 100 <pdf...>
+close_docs.ps1                      关闭可见 AutoCAD 里所有文档（不保存、不退出），带重试吃
+                                    RPC_E_CALL_REJECTED。注意 `$app.Documents.Item(1)` 本机返回
+                                    E_FAIL，必须用 `$app.ActiveDocument` 逐个关。
 p_caps.lsp / p_types.lsp / p_layers.lsp / p_plotcfg.lsp / lispcheck.py   能力与实体普查
 
 三、中间产物位置
