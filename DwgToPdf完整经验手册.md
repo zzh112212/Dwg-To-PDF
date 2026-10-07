@@ -2581,6 +2581,22 @@ EXTMIN/EXTMAX = 1746.65,1381.9 → 3438.65,2580.9   ⇒ 图框 1692 x 1199 mm
    | `ls-remote` 成功 | 只证明**读**通 | **不能**据此推断能 push |
 
    ⇒ 探测网络与认证时**必须分别测读与写**，并区分"连不上"和"连上了但没认证"这两种完全不同的问题。
+8. 🔴 **`git filter-repo` 瘦身：能精确定位"哪个提交引入大 blob"，且往往不需要 `--force`**
+   （2026-10-07 实测：`.git` **31.2 MB → 1.0 MB**，历史中 `.dwg` 归零）：
+   - **定位别靠猜提交信息**：`git filter-repo --analyze` 在 `.git\filter-repo\` 留下
+     `first-changed-commits`，直接点名是 **`857d352`** 引入了那 35.5MB 的 DWG 副本。
+     先前据提交信息推断成 `0148cef` —— **错的**；反证：瘦身后 `0148cef` 的 hash 原样未变。
+   - **命令**：`python -m git_filter_repo --path "DwgToPdf 工具 v4.16/_e2e_v416" --invert-paths --force`
+   - **关键结论（先判断错、被实测纠正）**：filter-repo **只改写"受影响提交及其后裔"的 hash**，
+     未受影响的提交 hash 原样保留 ⇒ 已推送的提交不在受影响集合里时，push 就是
+     **fast-forward，不需要 `--force`**。实测 `git push origin main` → `6575031..c7ad015` 直接成功。
+   - **两个副作用**：① **remote 会被移除**（含 `refs/remotes/origin/*`），需重新 `git remote add`；
+     ② 成功的 push 会自己补回 `refs/remotes/origin/main`，**不必依赖 `git fetch`**（fetch 还可能撞 22 端口超时）。
+   - **瘦身后必跑的判据**：`git rev-list --objects <ref> | Select-String '\.dwg'` = **0 条**、
+     最大 blob 合理（本次 = 214,825 B 的本文档）、`git fsck` 无输出。
+   - 前置条件：**别让真源图备份目录躺在工作区被 `add -A` 扫到**（本次 35.5MB 就是这么进的库）。
+     根治靠 `.gitignore`（`_e2e_v416/`、`**/in[0-9]*/`、`_交付_v416/`、`_工具/`、`*.dwg`）；
+     加规则后必须用 `git check-ignore -v --no-index -- <路径>` 验证，**别只看 `git status`**。
 
 ### 【本次新增/恢复的探针（v4.15\_探针，源码工程里原本缺失）】
 | 文件 | 用途 |
