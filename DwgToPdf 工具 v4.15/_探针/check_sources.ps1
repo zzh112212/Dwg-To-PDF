@@ -60,13 +60,27 @@ Write-Output ("working  : " + $Test + "  (" + $work.Count + " dwg)")
 Write-Output ""
 
 $bad = 0
+$locked = 0
 foreach ($f in $work) {
     if (-not $orig.ContainsKey($f.Name)) {
         Write-Output ("EXTRA     " + $f.Name + "  (not in baseline)")
         $bad++
         continue
     }
-    $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm MD5).Hash
+    # MEASURED 2026-10-07: a DWG being converted right now is LOCKED by AutoCAD/accoreconsole
+    # and Get-FileHash then throws "cannot read ... being used by another process".
+    # That is NOT evidence of modification -- reporting it as "MODIFIED" would be a false alarm
+    # on the very hard constraint we care most about. So locked files get their own verdict
+    # (LOCKED, counted separately) and a dedicated exit code.
+    $h = $null
+    $isLocked = $false
+    try { $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm MD5 -ErrorAction Stop).Hash }
+    catch { $isLocked = $true }
+    if ($isLocked) {
+        Write-Output ("LOCKED    " + $f.Name + "  (正被 AutoCAD/转换进程占用，本次无法判定 —— 不等于被改写)")
+        $locked++
+        continue
+    }
     $o = $orig[$f.Name]
     if ($h -eq $o.hash -and $f.Length -eq $o.size) {
         Write-Output ("OK        " + $f.Name + "  " + $f.Length + " B")
@@ -85,9 +99,18 @@ foreach ($name in ($orig.Keys | Sort-Object)) {
 }
 
 Write-Output ""
-if ($bad -eq 0) {
+if ($locked -gt 0) {
+    Write-Output ("SOURCES NOT FULLY CHECKED  (" + $locked + " 个文件被占用，无法判定)")
+    Write-Output "  被占用通常是 AutoCAD / accoreconsole 正在转换或打开该图纸。关闭后重跑本脚本。"
+    Write-Output "  ⚠ 占用**不是**被改写的证据；但在占用消失前，这些图既不能确认安全、也不能判定被改。"
+}
+if ($bad -eq 0 -and $locked -eq 0) {
     Write-Output ("SOURCES UNCHANGED  (" + $work.Count + "/" + $orig.Count + " match the authoritative originals)")
     exit 0
+}
+if ($bad -eq 0 -and $locked -gt 0) {
+    # 单独退出码：这一轮"没发现问题"，但也没"完成检查"。脚本不能假装通过了。
+    exit 3
 }
 Write-Output ("SOURCES CHANGED  (" + $bad + " problem(s)) -- 违反硬约束，请从 " + $Original + " 恢复")
 exit 1
