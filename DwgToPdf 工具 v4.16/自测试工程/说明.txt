@@ -1,0 +1,93 @@
+自测试工程（v4.12）
+================================
+
+v4.12：新增三个环境变量钩子（见文末「v4.12 环境变量钩子」），用于复现
+"大文件退回待处理 / 单张超时退回 / 再次点击开始转换不受限"三条链路。
+回归建议：--dir 全量 + 对比日志 [观测] 行。
+
+v4.11：自测试工程源码直编（新增源文件须同步登记到 SelfTest.csproj 的
+Compile 列表），extframe.lsp 经 PreserveNewest 自动同步到
+bin\Release\net48\。
+
+【工程简介】
+SelfTest 是 DwgToPdf 的自测试程序，直接引用 源码工程 的 .cs 编译
+（相对路径 ..\源码工程\，无第三方包），用于单元断言 + 真实端到端回归。
+编译产物：SelfTest.exe（连同 extframe.lsp / extframe_company.lsp 输出到
+bin\Release\net48\）。
+v4.4：csproj 新增编译 ConvertReport.cs（批量转换报告）；
+默认单元断言修正 3 条遗留陈旧断言（PISCES 比例期望值、plot 脚本窗口
+ll/ur 坐标——原断言用 v3.8 方案 G 之前的旧公式，长期 FAIL，
+现对齐现行实现，单元断言全 PASS）。
+
+【构建命令】
+  dotnet build "自测试工程\SelfTest.csproj" -c Release
+运行（在 bin\Release\net48\ 下）：
+  SelfTest.exe [命令] [参数]
+
+================================
+命令速查
+================================
+
+【快速回归三件套（改代码后必跑，<1 分钟）】
+  SelfTest.exe           默认：全部单元断言（PageSpec/FrameCache/Locator/
+                         ExtractScript/PlotScript/PrintQuality/模板库/并发等）
+  SelfTest.exe --sync    SmartConcurrency 并发调度单元测试
+  SelfTest.exe --dc      动态任务池冒烟（24 个假 dwg 走完整流程，验证不丢不重）
+  判定：三者全 PASS 即核心路径无回归。
+
+【目录全量回归（真实端到端，需 AutoCAD，耗时较长）】
+  SelfTest.exe --dir <输入目录> <输出目录>
+                         目录全量回归（通用版识别链，真实出图）
+  SelfTest.exe --dirc <输入目录> <输出目录>
+                         目录全量回归（公司版识别链）
+  SelfTest.exe --dirb <输入目录> <输出目录>
+                         公司版 + 开启"识别块图框"（图框为块的图纸）
+  输出目录中按文件生成 PDF，可配合 _调查\measure_margins.py 做边距测量。
+
+【冒烟 / 验收（真实 accoreconsole，需数分钟）】
+  SelfTest.exe --e2e                   端到端冒烟
+  SelfTest.exe --e2e-custom <dwg>      指定单张图纸端到端
+  SelfTest.exe --e2e-company           公司版端到端（公司版识别链冒烟）
+  SelfTest.exe --e2e-cancel <ms>       停止演练：转换启动 <ms> 毫秒后触发停止，
+                                       验证取消后状态正确回滚
+  SelfTest.exe --company-smoke         公司版冒烟
+  SelfTest.exe --hq-smoke              高质量打印冒烟
+  SelfTest.exe --fallback              COM 兜底路径测试
+
+【质量审查 / 对比 / 基准】
+  SelfTest.exe --margin-compare <src.dwg> <m1> <m2> [outDir]
+                         同图两次不同边距（如 10 0），控制变量验证
+                         "边距值是否真影响 PDF 输出"——排查功能生效类问题首选
+  SelfTest.exe --qa <目录>             PDF 质量审查（全量边距统计）
+  SelfTest.exe --bench <目录> [workers] 基准计时（默认 4 worker）
+  SelfTest.exe --compare-frames [limit] LISP vs COM 图框识别对比
+                         （可选第二参数限制张数，缺省=全量）
+  SelfTest.exe --gen-library           生成图框模板库（公司版标准库 json）
+  SelfTest.exe --probe-hq-media        高质量打印探测
+
+================================
+v4.12 环境变量钩子（可复现验证）
+================================
+  DWGTOPDF_MAX_MB=<MB>        注入大文件阈值 → 超限文件退回「待处理」（不判失败）
+  DWGTOPDF_TIMEOUT_SEC=<秒>   注入单张转换超时 → 超时中止该张并退回「待处理」
+  DWGTOPDF_IGNORE_LIMITS=1    模拟"再次点击开始转换" → 本轮忽略大小/超时限制
+用法（PowerShell）：
+  $env:DWGTOPDF_TIMEOUT_SEC="3"
+  & SelfTest.exe --dir <输入目录> <输出目录>
+  Remove-Item Env:DWGTOPDF_TIMEOUT_SEC
+预期（3 张约 20 秒的图纸、超时 3 秒）：
+  日志出现 "[待转换] … 转换超时（>3 秒），已退回待处理"，结束行
+  "成功 0 张，失败 0 张"；再加 DWGTOPDF_IGNORE_LIMITS=1 复跑 → 全部转出。
+
+【经验要点】
+- 改源码后跑快速回归三件套即可判断核心路径是否回归；简单 UI 改动
+  不必重跑 --e2e-*（省 10+ 分钟）。
+- 目录回归前先清空输出目录，避免旧 PDF 干扰对账。
+- v4.12：注入阈值类钩子时，--dir 的"PDF 数 == 输入数"断言会 FAIL（退回待处理
+  既不算成功也不算失败）——属预期，不是回归。
+- --dirb（块图框）：若块内没有闭合矩形（如 EQWE 只有 LINE+TEXT），该块会被
+  块图框特征过滤掉；此时需在「设置 → 块名列表」加入块名（forced 路径）。
+- 本工程引用源码用相对路径（..\源码工程\），移动目录后无需改引用。
+- v3.9 提示：--dc 冒烟偶发 DirectoryNotFoundException 属已知环境抖动
+  （经验手册 8.4：后台残留 AutoCAD 进程争用临时目录）；复跑稳定 PASS
+  即非代码回归。复跑前先清残留进程（PowerShell Stop-Process）。

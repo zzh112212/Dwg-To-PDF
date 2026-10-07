@@ -90,7 +90,13 @@ foreach ($v in ($Variants -split ',')) {
     $label = "lw$lw`_sh$shade"
 
     if ($shade -eq "keep") {
-        $shadeLine = "; shade-plot (146) kept as in drawing"
+        $shadeLine = "; nothing changed"
+    } elseif ($shade -eq "ole") {
+        # NEW (2026-10-07): hide every OLE2FRAME via DXF group 60 = 1 (invisible => not
+        # plotted). DIAGNOSTIC ONLY - answers "are the 16 embedded OLE objects in the PISCES
+        # sheets actually plotted, and is their content what makes the manual print look
+        # complete?". Never used by the product path.
+        $shadeLine = '(progn (setq so (ssget "_X" (list (cons 0 "OLE2FRAME")))) (if so (progn (setq on 0) (while (< on (sslength so)) (setq oe (ssname so on)) (entmod (append (entget oe) (list (cons 60 1)))) (setq on (1+ on))))) (entupd) (princ))'
     } else {
         $shadeLine = '(setq le (subst (cons 146 ' + $shade + ') (assoc 146 le) le))(princ)'
     }

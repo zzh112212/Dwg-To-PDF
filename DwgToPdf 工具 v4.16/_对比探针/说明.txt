@@ -1,0 +1,25 @@
+对比探针目录（v4.16\_对比探针）
+================================
+用途：只做「实证对比」，回答"为什么只有这 8 张 PISCES 图纸打印发浅"。
+不改动 v4.15 / v4.16 任何既有文件；不启动可见 AutoCAD；不对源图写操作。
+
+文件说明
+--------
+p_compare.lsp   一次性 dump 探针（ASCII）：布局组码(2/4/7/70/72/73/74/76/146)、
+                系统变量(LWDEFAULT/LWDISPLAY/CECOLOR/CELWEIGHT/PSTYLEMODE/
+                INSUNITS/MEASUREMENT)、图层表(name/c62/g370/g70)、
+                实体类型直方图、实体线宽 g370(按模型/图纸空间)、
+                实体透明度 g440、实体颜色 g62、实体图层 g8。只读(entget/tblnext/dictsearch)。
+run_compare.ps1 批量运行器：逐张把 DWG 复制到 C:\Temp\dwgtopdf_probe 再用
+                accoreconsole 打开，产物存到 out\，不写回源图。用法：
+                powershell -File run_compare.ps1 -ListFile dwglist.txt
+dwglist.txt     20 张对比清单（8 张问题 PISCES + 12 张对照）
+dwglist_smoke.txt 冒烟测试用 2 张
+aggregate.py    汇总 out\*.txt 成对比表
+out\            每张图纸的探针原始输出（可追溯每个数字）
+
+运行命令
+--------
+accoreconsole: D:\AutoCAD2026\AutoCAD 2026\accoreconsole.exe
+powershell -ExecutionPolicy Bypass -File run_compare.ps1
+python aggregate.py

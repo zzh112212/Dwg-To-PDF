@@ -1,0 +1,135 @@
+===== COMPARE DUMP =====
+DWGPREFIX = C:\Temp\dwgtopdf_probe\
+SYSVAR ACADVER = 25.1
+SYSVAR LWDEFAULT = 25
+SYSVAR LWDISPLAY = 0
+SYSVAR CECOLOR = BYLAYER
+SYSVAR CELWEIGHT = -1
+SYSVAR PSTYLEMODE = 1
+SYSVAR INSUNITS = 4
+SYSVAR MEASUREMENT = 1
+SYSVAR CTAB = Model / TILEMODE = 1
+LAYOUT Model
+   g2 = none_device
+   g4 = ISO_A4_(210.00_x_297.00_MM)
+   g7 = 
+   g70 = 11952
+   g72 = 1
+   g73 = 0
+   g74 = 0
+   g76 = 0
+   g146 = 0
+   g40 = 7.5
+   g41 = 20
+   g42 = 7.5
+   g43 = 20
+   g44 = 210
+   g45 = 297
+   g46 = 11.549999
+   g47 = -13.65
+   g48 = 0
+   g140 = 0
+   g147 = 0.114889
+   >> g70bits 11952 [+16 +32 +128 +512 +1024 +2048 +8192 ]
+LAYOUT 布局1
+   g2 = C:\Documents and Settings\basas\Application Data\Autodesk\AutoCAD 2005\R16.1\enu\plotters\Default Windows System Printer.pc3
+   g4 = 
+   g7 = 
+   g70 = 688
+   g72 = 0
+   g73 = 0
+   g74 = 5
+   g76 = 0
+   g146 = 0
+   g40 = 0
+   g41 = 0
+   g42 = 0
+   g43 = 0
+   g44 = 0
+   g45 = 0
+   g46 = 0
+   g47 = 0
+   g48 = 0
+   g140 = 0
+   g147 = 1
+   >> g70bits 688 [+16 +32 +128 +512 ]
+LAYOUT 布局2
+   g2 = C:\Documents and Settings\basas\Application Data\Autodesk\AutoCAD 2005\R16.1\enu\plotters\Default Windows System Printer.pc3
+   g4 = 
+   g7 = 
+   g70 = 688
+   g72 = 0
+   g73 = 0
+   g74 = 5
+   g76 = 0
+   g146 = 0
+   g40 = 0
+   g41 = 0
+   g42 = 0
+   g43 = 0
+   g44 = 0
+   g45 = 0
+   g46 = 0
+   g47 = 0
+   g48 = 0
+   g140 = 0
+   g147 = 1
+   >> g70bits 688 [+16 +32 +128 +512 ]
+----- LAYER TABLE -----
+LAYER 0 | c62=7 | g370=nil | g70=0
+LAYER 技术要求-构成-履历表 | c62=7 | g370=nil | g70=0
+LAYER 标注图层 | c62=7 | g370=nil | g70=0
+LAYER Defpoints | c62=7 | g370=nil | g70=0
+LAYER 标注层 | c62=100 | g370=nil | g70=0
+LAYER 图层图框 | c62=7 | g370=nil | g70=0
+LAYER PDF_几何图形 | c62=7 | g370=nil | g70=0
+LAYER 尺寸线层 | c62=4 | g370=nil | g70=0
+----- ENTITY PASS (whole database) -----
+SSGET_X TOTAL = 23376
+----- TYPE HISTOGRAM -----
+TYPE MTEXT x259
+TYPE LWPOLYLINE x38
+TYPE ACAD_TABLE x4
+TYPE DIMENSION x36
+TYPE CIRCLE x162
+TYPE MULTILEADER x42
+TYPE LINE x12217
+TYPE ARC x4702
+TYPE POLYLINE x2290
+TYPE ELLIPSE x3580
+TYPE HATCH x3
+TYPE OLE2FRAME x5
+TYPE POINT x38
+----- ENTITY LINE WEIGHT g370 (MODEL space) -----
+MODEL with370 = 10877 / without370 = 12499
+PAPER with370 = 0 / without370 = 0
+G370M NO_370 x12499
+G370M 9 x1
+G370M 0 x6
+G370M 35 x6716
+G370M 13 x4105
+G370M -3 x47
+G370M 18 x2
+----- CURVE-TYPE g370 (MODEL space) -----
+G370CURV NO_370 x12122
+G370CURV 35 x6715
+G370CURV 13 x4105
+G370CURV -3 x47
+----- ENTITY TRANSPARENCY g440 (MODEL space) -----
+MODEL entities with440 = 0
+G440M <none>
+----- ENTITY COLOR g62 (MODEL+ALL) -----
+G62 0 x220
+G62 <none> x21709
+G62 4 x1
+G62 7 x931
+G62 3 x75
+G62 150 x128
+G62 5 x23
+G62 2 x114
+G62 61 x45
+G62 8 x38
+G62 200 x37
+G62 1 x55
+----- ENTITY LAYER g8 (MODEL+ALL) -----
+FATAL: 参数类型错误: fixnump: ((2 . "0") (70 . 0) (62 . 7) (6 . "Continuous"))
