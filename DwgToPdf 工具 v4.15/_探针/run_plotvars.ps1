@@ -102,6 +102,12 @@ foreach ($v in ($Variants -split ',')) {
     # logior(logand(70 -17) 4) (clear 0x10, set 0x04) and therefore leaves 0x80 as found.
     $lwBitLine = '(setq le (subst (cons 70 (logior (logand (cdr (assoc 70 le)) -129) ' + $(if ($lw -eq "1") { "128" } else { "0" }) + ')) (assoc 70 le) le))(princ)'
 
+    # v4.16 (2026-10-07): group 76 is the layout's shade-plot field, NOT 146 (146 is the
+    # plot ELEVATION in the AcDbLayout section). Forcing 76=0 turns the page from a
+    # full-page raster into real vector output. Earlier "accore ignores plot settings"
+    # tests were invalid because they varied 146 - the wrong group code.
+    $shade76Line = '(if (assoc 76 le) (setq le (subst (cons 76 0) (assoc 76 le) le)) (setq le (append le (list (cons 76 0)))))(princ)'
+
     $scr = @"
 FILEDIA
 0
@@ -111,6 +117,7 @@ $lw
 (setsetq d (dictsearch (namedobjdict) "ACAD_LAYOUT") lay (cdr (assoc 350 (member (cons 3 "Model") d))) le (entget lay))(princ)
 $shadeLine
 $lwBitLine
+$shade76Line
 (entmod le)(princ)
 -EXPORT
 PDF

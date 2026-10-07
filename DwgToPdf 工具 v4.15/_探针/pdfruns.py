@@ -179,7 +179,11 @@ def _vector_widths(data):
             v = float(m.group(1))
         except ValueError:
             continue
-        if 0 < v < 20:
+        # MEASURED 2026-10-07: the old filter `0 < v < 20` dropped every hairline stroke,
+        # so a page whose strokes are ALL `0 w` reported "line widths = none". That was
+        # read as "the vector writer never set a width", when the truth is "every stroke
+        # was flattened to hairline" - the two are opposites. Keep 0 in the histogram.
+        if 0 <= v < 20:
             k = "%.3f" % v
             vals[k] = vals.get(k, 0) + 1
     return vals

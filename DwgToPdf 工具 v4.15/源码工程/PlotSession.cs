@@ -182,6 +182,20 @@ namespace DwgToPdf.Batch
             yield return Set(2, "\"" + plotter + "\"");
             yield return Set(4, "\"" + media + "\"");
             yield return Set(7, "\"" + ctb + "\"");
+            // v4.16（2026-10-07，用户实测"打印发浅"真根因）：布局记录的**组码 76 = 着色打印**
+            // （位于 AcDbPlotSettings 段）。PISCES 这批图纸里它是 4（着色/渲染），
+            // AutoCAD 的 PDF 驱动会把**整页光栅化**（实测：76=0/1 → 矢量内容流 1.9MB、
+            // 只有 16 个 30x29px 的 OLE 小图；76=3/4 → 矢量内容流 4KB、整页 301dpi 位图），
+            // 线条被烘进位图、线宽层次被抹平成单一 0.32mm —— 这才是"发浅"的成因。
+            // 写 0（按显示），与用户手动打印（PLOT 对话框：着色打印=按显示）的参照一致。
+            // ⚠ 不要再把组码 146 当成着色打印：146 在 **AcDbLayout** 段，是**标高**，
+            //   手册第27/28 章早前把它标注为"146 着色打印"是错的（第29 章已更正）。
+            // ⚠ 不能用上面的 Set() 写 76：它在 (assoc 76 le) 为 nil 时 **不报错但也不写入**
+            //   （subst 找不到旧值就原样返回），而 PISCES 里7633639 / 7643421 的布局记录
+            //   恰好没有 76 —— 实测这两张设了 76=0 仍是整页光栅（62 / 31 图块）。
+            //   因此 76 单独用"有则替换、无则追加"的写法。
+            // 只改内存中的副本，Close(0)/QUIT N 不保存 ⇒ 源图不受影响。
+            yield return "(if (assoc 76 le) (setq le (subst (cons 76 0) (assoc 76 le) le)) (setq le (append le (list (cons 76 0)))))(princ)";
             yield return Set(40, "0.0");
             yield return Set(41, "0.0");
             yield return Set(42, "0.0");
