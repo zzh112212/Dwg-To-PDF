@@ -11,6 +11,40 @@ namespace DwgToPdf.Batch;
 // / RunComOnly（整批回退 COM 编排）/ WorkerLoop（v2.3.1 COM 出图轮询）
 internal sealed partial class ConverterEngine
 {
+	/// <summary>
+	/// v4.16：为出图准备一份**安全副本**，让源图保持只读。
+	/// <para>为什么需要：accoreconsole 就地打开图纸并对布局做 entmod 时，AutoCAD 的自动保存/
+	/// 崩溃恢复会把改动**写回源文件**。</para>
+	/// <para>⚠ 历史结论更正（2026-10-07，TRAE 实测 + 权威原件比对，见 handoff §11.2）：
+	/// 此前此处写"实测到 3 张源图 MD5 变了"**是错的** —— 那个基线文件
+	/// `_探针\out\源图纸哈希_改前.txt` 记的不是原件哈希（它属另一版本），用它做判据会同时
+	/// 产生"被改写"和"没被改写"两个方向的错误结论。真实情况：**只有 7633639 一张曾被改写**，
+	/// 已用权威原件 `E:\钉钉下载\DWG` 恢复，现 8/8 与原件逐字节一致。
+	/// 校验工具：`_探针\check_sources.ps1`（只读字节，不打开图纸）。</para>
+	/// <para>为什么不能直接用 copyPath：默认模式（页面设置内联，见 useAccoreSetup）不做
+	/// COM 预处理，copies 是空字典 ⇒ copyPath 为 null ⇒ accore 收不到文件、整批回退 COM
+	///（实测 8/8 回退）。所以"要不要做 COM 预处理"与"要不要给安全副本"必须解耦。</para>
+	/// <para>副本放在工具自己的 tempDir 下、文件名 ASCII 化（accoreconsole 不支持中文路径）。
+	/// 失败返回 null，由调用方跳过该文件 —— <b>绝不退回把源图原件交出去</b>。</para>
+	/// </summary>
+	internal static string MakeSafeCopy(string src, string tmpDir)
+	{
+		try
+		{
+			string dir = string.IsNullOrEmpty(tmpDir)
+				? Path.Combine(Path.GetTempPath(), "dwgtopdf_plot")
+				: tmpDir;
+			Directory.CreateDirectory(dir);
+			string dst = Path.Combine(dir, "plot_" + Guid.NewGuid().ToString("N").Substring(0, 12) + ".dwg");
+			File.Copy(src, dst, true);
+			return dst;
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
 	// v4.12：删除"长时转换提醒"（原 v4.8 需求③ StartSlowRemind + SlowRemindSeconds 设置项）——
 	// 用户反馈该提醒无实际价值，改为不提醒（超时/慢文件仍可在日志头部看到耗时统计）。
 
@@ -27,6 +61,7 @@ internal sealed partial class ConverterEngine
 		// v4.5：PDF 输出结构（true=全部放 PDF文件\ 根下；false=按原文件夹结构）
 		bool flatOutput = print != null && print.FlatOutput;
 		// v3.4：本线程兜底复用的 COM 实例（懒加载，跨文件复用，收尾统一 Shutdown）
+		/// <summary>
 		CadConverter fallbackConv = null;
 		while (true)
 		{
@@ -87,10 +122,18 @@ internal sealed partial class ConverterEngine
 					string copyPath = null;
 					if (copies != null) copies.TryGetValue(src, out copyPath);
 					bool hasCopy = !string.IsNullOrEmpty(copyPath) && File.Exists(copyPath);
-					// v4.12：页面设置内联——"有边距(居中)"模式下无副本时直接用源图出图，
-					// 页面设置在出图会话内 entmod 完成（等效 COM 预处理，见附录 24 章）
-					bool useAccoreSetup = accoreSetup && !hasCopy;
-					bool canPlot = hasBox && (hasCopy || useAccoreSetup);
+										// v4.16：页面设置内联——"有边距(居中)"模式下无副本时直接用源图出图，
+										// 页面设置在出图会话内 entmod 完成（等效 COM 预处理，见附录 24 章）
+										bool useAccoreSetup = accoreSetup && !hasCopy;
+										// v4.16 安全修复（TRAE 实测 R7 报告了源图被写回，见 handoff）：
+										// **出图永远拿副本**，绝不把源图原件交给 accoreconsole / COM。
+										// 但"是否做 COM 页面设置预处理"（hasCopy）与"是否给一份安全副本"是两件事，
+										// 因此这里单独造一份临时副本：既保住 v4.12 的内联页面设置优化（不必再跑一遍
+										// COM 预处理），又满足"源图只读"的硬约束。
+										// 注意：不能简单写成 plotter.Plot(plotSrc, ...) —— 默认模式 copies 为空字典，
+										// copyPath 会是 null，导致 accore 收不到文件、整批回退 COM（TRAE R8 实测到该回归）。
+										string plotSrc = hasCopy ? copyPath : MakeSafeCopy(src, tmpDir);
+										bool canPlot = hasBox && !string.IsNullOrEmpty(plotSrc);
 
 						PageSpec.Resolved ps = null; // v4.1：移到外部供质量核查使用
 					string qualityPc3 = null;    // v4.15：含图片图纸的高清 pc3（COM 出图用；非空=跳过 accore）
@@ -159,13 +202,15 @@ internal sealed partial class ConverterEngine
 // 原代码是 `useAccoreSetup ? src : copyPath` —— accore 模式下把**源图原件**直接交给
 // accoreconsole，而出图脚本会对 Model 布局做 entmod（页面设置 / 组码 76 等）。
 // AutoCAD 的自动保存与崩溃恢复会把这种就地打开的图**写回源文件**。
-// 实测后果：`打印问题文件` 里 8 张源图的 mtime 全部集中在同一分钟，其中 3 张
-// （7633639/ 7633640 / 7643423）**内容 MD5 被改写** —— 违反"不得改变图纸内容"的硬约束。
+// ⚠ 实测后果的更正（2026-10-07，见 handoff §11.2）：此前此处写"其中 3 张（7633639/7633640/
+// 7643423）内容 MD5 被改写"**是错的** —— 旧基线文件 `_探针\out\源图纸哈希_改前.txt` 记的不是
+// 原件哈希（属另一版本）。真实只有 **7633639 一张**曾被改写，已用权威原件
+// `E:\钉钉下载\DWG` 恢复，现 8/8 与原件逐字节一致；校验工具 `_探针\check_sources.ps1`。
 // 现在两条通道统一用 copyPath，源图只被读取（图框识别仍读源，见FrameExtractor），
 // 任何写回都只会落在临时目录的副本上。
 // 代价：副本在临时目录，图纸里的 Xref 相对路径可能解析不到；出图只用 extents/窗口，
 // 实测 40 张公司版 + 8 张 PISCES 均不受影响（若将来有 Xref 依赖图纸需另做相对路径重定向）。
-							ok = plotter.Plot(copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
+							ok = plotter.Plot(plotSrc, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
 							}
 							if (ok && isHighQ) hqStat[0]++;
 						}
@@ -263,13 +308,15 @@ internal sealed partial class ConverterEngine
 // 原代码是 `useAccoreSetup ? src : copyPath` —— accore 模式下把**源图原件**直接交给
 // accoreconsole，而出图脚本会对 Model 布局做 entmod（页面设置 / 组码 76 等）。
 // AutoCAD 的自动保存与崩溃恢复会把这种就地打开的图**写回源文件**。
-// 实测后果：`打印问题文件` 里 8 张源图的 mtime 全部集中在同一分钟，其中 3 张
-// （7633639/ 7633640 / 7643423）**内容 MD5 被改写** —— 违反"不得改变图纸内容"的硬约束。
+// ⚠ 实测后果的更正（2026-10-07，见 handoff §11.2）：此前此处写"其中 3 张（7633639/7633640/
+// 7643423）内容 MD5 被改写"**是错的** —— 旧基线文件 `_探针\out\源图纸哈希_改前.txt` 记的不是
+// 原件哈希（属另一版本）。真实只有 **7633639 一张**曾被改写，已用权威原件
+// `E:\钉钉下载\DWG` 恢复，现 8/8 与原件逐字节一致；校验工具 `_探针\check_sources.ps1`。
 // 现在两条通道统一用 copyPath，源图只被读取（图框识别仍读源，见FrameExtractor），
 // 任何写回都只会落在临时目录的副本上。
 // 代价：副本在临时目录，图纸里的 Xref 相对路径可能解析不到；出图只用 extents/窗口，
 // 实测 40 张公司版 + 8 张 PISCES 均不受影响（若将来有 Xref 依赖图纸需另做相对路径重定向）。
-							ok = plotter.Plot(copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
+							ok = plotter.Plot(plotSrc, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
 							}
 							// v4.15 修订：COM 兜底也失败时，再给常规通道一次机会——accore 失败常为**瞬态**
 							// （"未能找到路径中的某个部分"：全量 183 张/公司版 40 张批量下偶发，隔离复跑即消失，
@@ -282,13 +329,15 @@ internal sealed partial class ConverterEngine
 // 原代码是 `useAccoreSetup ? src : copyPath` —— accore 模式下把**源图原件**直接交给
 // accoreconsole，而出图脚本会对 Model 布局做 entmod（页面设置 / 组码 76 等）。
 // AutoCAD 的自动保存与崩溃恢复会把这种就地打开的图**写回源文件**。
-// 实测后果：`打印问题文件` 里 8 张源图的 mtime 全部集中在同一分钟，其中 3 张
-// （7633639/ 7633640 / 7643423）**内容 MD5 被改写** —— 违反"不得改变图纸内容"的硬约束。
+// ⚠ 实测后果的更正（2026-10-07，见 handoff §11.2）：此前此处写"其中 3 张（7633639/7633640/
+// 7643423）内容 MD5 被改写"**是错的** —— 旧基线文件 `_探针\out\源图纸哈希_改前.txt` 记的不是
+// 原件哈希（属另一版本）。真实只有 **7633639 一张**曾被改写，已用权威原件
+// `E:\钉钉下载\DWG` 恢复，现 8/8 与原件逐字节一致；校验工具 `_探针\check_sources.ps1`。
 // 现在两条通道统一用 copyPath，源图只被读取（图框识别仍读源，见FrameExtractor），
 // 任何写回都只会落在临时目录的副本上。
 // 代价：副本在临时目录，图纸里的 Xref 相对路径可能解析不到；出图只用 extents/窗口，
 // 实测 40 张公司版 + 8 张 PISCES 均不受影响（若将来有 Xref 依赖图纸需另做相对路径重定向）。
-							ok = plotter.Plot(copyPath, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
+							ok = plotter.Plot(plotSrc, pdfPath, box, pc3Name, mediaName, landscape, ctb, marginMm, tmpDir, out reason, plotCancel, useAccoreSetup ? ps : null, print.ShowLineWeight);
 							}
 							// v4.3：COM 兜底后也用多元化质量审查（文件大小 + MediaBox + 内容流）
 							// v4.6：ps 可能为 null（无图框/无副本的文件走 COM 兜底成功时）——
