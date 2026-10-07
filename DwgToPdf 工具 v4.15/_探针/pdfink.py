@@ -8,6 +8,14 @@ Why (2026-10-07):
     ends up. Rendering the page and averaging pixel darkness answers the
     acceptance question directly: "is A darker than B?".
 
+Discipline (2026-10-07, after the "light output" A/B):
+    This is a *corroborating* measurement only -- never the discriminator.
+    Reason: rendered ink volume can be pushed around by rasterisation mode, DPI
+    and antialiasing, so "A darker than B" alone cannot tell *why*.
+    The discriminator is pdfruns.py's per-stroke effective line width histogram
+    (hairline `0 w` vs real widths like 0.25mm): that is the one variable the
+    fix actually controls. Use pdfink.py to confirm the visual outcome.
+
 What it reports, per PDF:
     - page size (pt / mm)
     - ink<128   : share of pixels darker than mid-grey   (thick strokes => up)
