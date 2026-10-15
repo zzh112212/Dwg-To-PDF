@@ -2,12 +2,12 @@
 
 交接简报。**接收方是零上下文的新会话，本文件必须自包含。**
 
-- 更新时间：2026-10-15 14:10
+- 更新时间：2026-10-15 15:25
 - 计划文件：`.planning/task_plan.md`（阶段/决策/错误表）
 
 ## Task
 
-把用户 2026-10-15 的三项反馈落地到 DwgToPdf 批量转 PDF 工具，**保持版本号 v4.17 不升版**；全量回归无新增失败、文档同步、发布目录 exe 与源码一致，并完成 git 提交与推送。当前状态：已交付已入库，等待用户实测验收。
+把用户 2026-10-15 的三项反馈落地到 DwgToPdf 批量转 PDF 工具，**保持版本号 v4.17 不升版**；全量回归无新增失败、文档同步、发布目录 exe 与源码一致，并完成 git 提交与推送。当前状态：已交付已验收；规则七.2/二.4 台账补齐，main 与 origin/main 同步，等待用户择机 ima 上传与下一版本优化计划。
 
 ## Context
 
@@ -17,7 +17,7 @@
   - `发布程序 v4.17/` —— 交付目录：DwgToPdf.exe + .config + extframe*.lsp + 公司图框标准库.json + 运行说明.txt + 运行日志/
 - **Git 仓库实况**：`.git` 在 `Dwg-To-PDF/`（10-14 从个人 GitHub `zzh112212/Dwg-To-PDF` 克隆，非个人机原始库）。
   本机 git 身份已配置且与历史作者一致（`zzh112212 <2959338582@qq.com>`）。
-  已提交并推送 `8974e8f`（main 与 origin/main 同步）。**公司电脑 HTTPS 可直推 GitHub**（个人机须 SSH 的结论不适用于公司网络）。
+  已提交并推送至 `f1c173a`（8974e8f → 3c6937c → ea50c40 → 76b9be4 → f1c173a，main 与 origin/main 同步）。**公司电脑 HTTPS 可直推 GitHub**（个人机须 SSH 的结论不适用于公司网络）；推送偶发失败（schannel 中断 / 代理 CONNECT 502 on github.com，同代理 api.github.com 仍通 200）属瞬时态，原样重试即通，勿急着改代理配置。
 - 权威文档：`Dwg-To-PDF/DwgToPdf完整经验手册.md`（第31章 UCS 根因、第32章 修订三）；版本沿革看 `说明.txt` 第十三/十四节。
 - 便携 SDK：`/c/Users/ZINOVIA/Desktop/ZZH/D盘/工具包合集/本地SDK/dotnet8/dotnet.exe`（sdk 8.0.424）。
 - 用户项目规则：不明确先问（95% 把握再动手）；回复必须中文；只改代码不改手册不予验收；任务完成后需按 dev-lessons 流程弹窗验收。
@@ -44,7 +44,7 @@
 - 编译 0 警告 0 错误（主工程 + 自测工程）；SelfTest **108/108 PASS、退出码 0**。
 - 全量回归 115 张 → **113 成功 / 2 失败**（2 张 H77 风扇件为既有问题，与手册第30章基线一致）；113 张 PDF 墨迹测量：0 空页、最小边距 5.40mm、无 <3mm。
 - 版本号回退完成（用户 13:09 明确「本轮的改动不升版本」）：93 处 v4.18 标注全部改为「v4.17 修订三」；exe 13:15 重新发布并核验。
-- **git 已闭环**：提交 `8974e8f`（138 文件，+5989/-5440：v4.17 全量 82 文件入库，其中 48 个文件被 git 识别为 v4.15→v4.17 重命名、50 个纯删；.planning 四件套 + 手册）并推送，main 与 origin/main 同步。
+- **git 已闭环**：提交 `8974e8f`（138 文件，+5989/-5440：v4.17 全量 82 文件入库，其中 48 个文件被 git 识别为 v4.15→v4.17 重命名、50 个纯删；.planning 四件套 + 手册）并推送；其后 `3c6937c`（.planning 验收通过）、`ea50c40`（手册合并记录）、`76b9be4`（版本变更记录.txt，规则七.2）、`f1c173a`（版本记录笔误订正）均已推送，main 与 origin/main 同步。
 - 阶段进度：8.6/8.6 完成（见 task_plan.md Phases）。
 
 ## What Was Tried
@@ -81,6 +81,9 @@
   （11 条正式条目：GEN-WIN×3 / GEN-TEST×2 / GEN-GIT×2 / PRJ×4，`lessons.py check`/`toc` 通过；
   文件在工作区根、仓库 `Dwg-To-PDF/` 之外，不随仓库提交）；10-15 14:05 已把完整经验手册全文
   合并为文末附录（253KB/3384 行，供后续 ima 单文件上传；手册原文仍在仓库内维护）
+- [x] 规则七.2：专门版本变更记录 `Dwg-To-PDF/版本变更记录.txt`（版本总账 + 关键决策 D1~D4 + git 里程碑）已建库提交（76b9be4），笔误订正（f1c173a）
+- [x] 规则二.4：`experiences/说明.txt` 已建（目录定位/结构与文件用途/lessons.py view·check·toc·stats 用法/新增经验纪律/ima 上传计划；experiences/ 在仓库外，不随 git 提交）
+- [x] ima 上传就绪：`experiences/lessons.md` 253,721 字节 ≤10MB，check 11 条全过；流程 preflight→check_repeated_names→create_media→COS→add_knowledge（需 IMA 凭证），时机由用户定
 
 ## Constraints
 
@@ -98,3 +101,4 @@
 2. （已澄清）「工作日志」不存在独立文件，`运行日志/DwgToPdf_后台日志_*.txt` 由程序自动追加，无需手工同步。
 3. **下一节点**：用户将提「下一版本优化计划」——需求到达前不动手（用户规则：95% 把握再执行）；
    新版本开工前先 `lessons.py view` 查经验库并过一遍 PRJ-001~004。
+   另：用户择机把 `lessons.md` 上传 ima 知识库（单文件已就绪，流程见 Acceptance Criteria）。
