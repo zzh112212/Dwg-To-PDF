@@ -136,7 +136,7 @@ public class SettingsForm : Form
             // v4.17：说明精简（用户要求：简短、正式）
             Text = "说明：PDF 小于该值即判定内容缺失。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 1);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 1), 2);
 
@@ -145,7 +145,7 @@ public class SettingsForm : Form
             // v4.17：说明精简
             Text = "另含页尺寸、内容流字节数综合判定。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 2);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 2), 2);
 
@@ -298,7 +298,7 @@ public class SettingsForm : Form
             // v4.17：说明精简
             Text = "说明：同目录输出时同名图纸自动加子目录前缀。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 1);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 1), 2);
 
@@ -322,7 +322,7 @@ public class SettingsForm : Form
             // v4.17 修订三：占位符说明（时钟精度不够时可用日期）
             Text = "可用 HH(时) mm(分) ss(秒) 与 yyyy/MM/dd(日期)；时间分隔符用全角冒号：，留空=默认 PDF-HH:mm:ss。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 3);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 3), 2);
 
@@ -349,7 +349,7 @@ public class SettingsForm : Form
             // v4.17：说明精简
             Text = "0 表示不限制；超限文件退回「待处理」栏。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 5);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 5), 2);
 
@@ -376,7 +376,7 @@ public class SettingsForm : Form
             // v4.17：说明精简（原"并发下单张正常 10~30 秒…需多轮补转"过长）
             Text = "0 表示不限制；设置过小会大量退回。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 7);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 7), 2);
 
@@ -404,7 +404,7 @@ public class SettingsForm : Form
             // v4.17：说明精简（实测依据见手册第26章）
             Text = "仅对含图片的图纸生效；改用打印通道，单张较慢。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.Gray
+            ForeColor = Color.FromArgb(90, 90, 90)
         }, 0, 9);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 9), 2);
 

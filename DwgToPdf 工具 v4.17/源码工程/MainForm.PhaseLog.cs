@@ -99,15 +99,17 @@ internal sealed partial class MainForm
 				}
 				else
 				{
-					chip.BackColor = Color.FromArgb(223, 240, 216);
-					chip.ForeColor = Color.FromArgb(46, 104, 57);
+					// v4.17 修订四（B 档·语义正名）：进行中改为蓝色系（原绿色系与"已完成"反直觉）
+					chip.BackColor = Color.FromArgb(221, 235, 247);
+					chip.ForeColor = Color.FromArgb(31, 78, 121);
 					chip.Text = PhaseNames[i];
 				}
 			}
 			else if (!reached)
 			{
-				chip.BackColor = Color.FromArgb(221, 235, 247);
-				chip.ForeColor = Color.FromArgb(31, 78, 121);
+				// v4.17 修订四（B 档·语义正名）：已完成改为绿色系（蓝=进行中、绿=已完成，符合直觉）
+				chip.BackColor = Color.FromArgb(223, 240, 216);
+				chip.ForeColor = Color.FromArgb(46, 104, 57);
 				chip.Text = PhaseNames[i];
 			}
 			else

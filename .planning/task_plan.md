@@ -11,9 +11,12 @@
 - 不明确的需求先问清楚再动手（用户要求 95% 把握才执行）
 
 ## Current Phase
-phase8.6 —— v4.17 修订三已交付、版本号回退完成、全部回归通过；规则台账补齐（七.2 版本变更记录.txt / 二.4 experiences/说明.txt）；HEAD=`27ff693` 已推送
-（8974e8f → 3c6937c → ea50c40 → 76b9be4 → f1c173a → 27ff693，main 与 origin/main 同步）；**用户实测验收已通过（10-15）**；经验文件
-`experiences/lessons.md` 已创建（12 条正式条目，check/toc 通过）。下一节点：ima 上传（用户择机）+ 等待下一版本优化计划。
+phase8.7 —— **v4.17 修订四（界面优化 B 档）已交付并验收通过（10-15）**。不改功能、不升版本
+（`Program.Version` 维持 v4.17）。改动：P0 1 处（"自动滚动"开关实测 108×3px 静默失效）+ P1 6 处
+像素错位 + B 档一致性 5 项。验证：编译 0 警告 0 错误、SelfTest 108/108 PASS、控件树复测逐项达标。
+经验库新增 3 条正式条目（GEN-WIN-005/006、GEN-TEST-003），13 → 16 条，check/toc 通过。
+**未提交 git**（待用户指令）。发布目录 exe 已刷新（版本串核验 v4.17 / 无 v4.18）。
+（phase8.6 = v4.17 修订三已交付并验收通过，HEAD=`27ff693`→`1106c8e` 已推送）
 
 ## Phases
 | phase | 内容 | 状态 |
@@ -23,6 +26,7 @@ phase8.6 —— v4.17 修订三已交付、版本号回退完成、全部回归�
 | 8 | v4.17 修订二：UCS 复位为世界坐标系（问题图纸 557 27MY-Y17369xx 错位/裁切根因） | complete（10-15） |
 | 8.5 | v4.17 修订三：跳过已成功图纸 / 时间戳 PDF 文件夹（全角冒号）/ UCS 条件复位 | complete（10-15） |
 | 8.6 | 版本号回退 v4.18 → v4.17（用户决策：本轮不升版），93 处标注批量回退 | complete（10-15 13:15 重新发布） |
+| 8.7 | v4.17 修订四：界面优化 B 档（P0 自动滚动开关失效 + 6 处像素错位 + 信息层级重组 + 阶段色正名） | complete（10-15 用户验收通过） |
 
 ## Decisions（仍在有效期，含理由）
 | # | 决策 | 理由 |
@@ -37,6 +41,7 @@ phase8.6 —— v4.17 修订三已交付、版本号回退完成、全部回归�
 | D13 | 已成功图纸默认跳过，不加设置项 | 用户：正常只转换"待转化"列表里的文件 |
 | D14 | UCS 先探测再复位（WORLDUCS==1 直接 return false） | 实测零开销：2.29s vs 2.29s（噪声内） |
 | D15 | Windows 工程文件改写保留 CRLF + BOM | 防编码破坏 |
+| D16 | 界面优化按用户选定「B 档」执行（A 保守修复 + 一致性优化），不升版本号 | 用户 10-15："A/B。不升版本。"；纯 UI 改动，不动引擎与领域规则 |
 
 ## Error 表（同一失败动作不做第 2 次）
 | # | 错误 | 处理 |
@@ -49,11 +54,14 @@ phase8.6 —— v4.17 修订三已交付、版本号回退完成、全部回归�
 | E14 | .NET 字符串在 exe 里是 UTF-16LE，ASCII grep 查不到版本号 | 用 `s.encode('utf-16-le') in exe_bytes` 验证 |
 | E15 | SelfTest 控制台输出是 GBK，管道抓取后按 UTF-8 解码全是乱码 | 按 GBK 解码 |
 | E16 | 追加 memory 日志时把行尾转换写死 CRLF，而 memory 日志是纯 LF 无 BOM → 追加段混入 CRLF、自校验 FAIL | 追加前先探测 BOM 与主导行尾再构造插入文本（已升华条目 GEN-WIN-004） |
+| E17 | `logHeader` 先 Add(Dock=Right 复选框) 再 Add(Dock=Top 标题) → 复选框被压成 108×3px，v4.15 的"自动滚动"开关静默失效（无报错、肉眼几乎不可见） | **WinForms Dock 按 z-order 逆序布局（后 Add 的先占位）**：同容器内 "Top 标题 + Right 按钮" 必须**标题先 Add**；UI 缺陷一律用控件树 dump 复测尺寸，不能只靠看截图 |
 
 ## Next Step（单一动作）
-**等待用户提出下一版本优化计划**（需求明确前不动手——用户规则：95% 把握再执行，拒绝猜想）。
-用户另一待触发事项：择机将 `experiences/lessons.md` 上传 ima 知识库（单文件已就绪；流程 preflight→check_repeated_names→create_media→COS→add_knowledge，需 IMA 凭证）。
-若用户带需求回来 → 先记入手头任务清单，开跑前用 `lessons.py view` 查经验库（PRJ-001~004 / GEN-* 均为本轮实证）。
+**等待用户指令：是否 git 提交本轮改动（v4.17 修订四）**——提交/推送历来需用户明确指令。
+若提交：先 `git add -n` 预演（确认无 bin/obj/测试产物混入），提交信息含"UI 优化 B 档 + 经验条目 13→16"。
+用户另一待触发事项：择机将 `experiences/lessons.md` 上传 ima 知识库（单文件已就绪，约 261KB ≤ 10MB；
+流程 preflight→check_repeated_names→create_media→COS→add_knowledge，需 IMA 凭证）。
+待用户决定：`_测试输出/UI评审/` 下的工具链（capture_win.py / dump_controls.py）与截图是否长期保留。
 
 ## 历史归档
 10-07「PISCES 发浅」协作期（含 CodeBuddy ⇄ TRAE 双向协议、F1~F9 实测）已完成闭环：

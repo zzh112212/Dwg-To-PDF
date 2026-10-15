@@ -168,6 +168,8 @@ internal sealed partial class MainForm : Form
 		Text = _baseTitle;
 		Font = new Font("Microsoft YaHei UI", 9f);
 		base.ClientSize = new Size(760, 680);
+		// v4.17 修订四（P1-6）：原来未设最小尺寸，窗口可被拖到布局崩坏（三栏/按钮行挤成一团）
+		MinimumSize = new Size(800, 660);
 		base.StartPosition = FormStartPosition.CenterScreen;
 		// v4.3：启动时从 settings.json 加载用户设置
 		LoadAppSettings();
@@ -194,7 +196,7 @@ private void BuildUi()
 		// ---------- 1) 输入输出 ----------
 		_grpInput = new GroupBox
 		{
-			Text = "输入输出（支持拖拽、Ctrl+V 粘贴、Ctrl+Z 撤销）",
+			Text = "输入输出",
 			Dock = DockStyle.Top,
 			Height = 100,
 			Padding = new Padding(10, 6, 10, 4)
@@ -208,14 +210,14 @@ private void BuildUi()
 		tblInput.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
 
 		var lblInput = new Label { Text = "待转换文件", TextAlign = ContentAlignment.MiddleLeft, Dock = DockStyle.Fill };
-		_txtInput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5) };
+		_txtInput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5), BackColor = Color.FromArgb(247, 247, 247) };
 		_btnInput = new Button { Text = "添加文件…", Width = 96, Height = 28, Margin = new Padding(4, 6, 2, 6) };
 		_btnInput.Click += delegate { AddFilesDialog(); };
 		_btnInputFolder = new Button { Text = "添加文件夹…", Width = 110, Height = 28, Margin = new Padding(2, 6, 4, 6) };
 		_btnInputFolder.Click += delegate { AddFolderDialog(); };
 
 		var lblOutput = new Label { Text = "输出文件夹", TextAlign = ContentAlignment.MiddleLeft, Dock = DockStyle.Fill };
-		_txtOutput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5) };
+		_txtOutput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5), BackColor = Color.FromArgb(247, 247, 247) };
 		_btnOutput = new Button { Text = "浏览…", Width = 96, Height = 28, Margin = new Padding(4, 6, 4, 6) };
 		_btnOutput.Click += delegate { PickFolder(_txtOutput, "选择放置生成的 PDF 的输出文件夹"); };
 
@@ -236,16 +238,21 @@ private void BuildUi()
 			Height = 92, // v4.8：80 不够容纳两行控件（含标题行约需 86px），第二行底部被裁剪
 			Padding = new Padding(10, 8, 10, 4)
 		};
-		var tblOpt = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 6, RowCount = 2 };
-		tblOpt.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOpt.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOpt.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOpt.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOpt.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOpt.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+		// v4.17 修订四（P1-5）：原两行共用一个 6 列 AutoSize 栅格，列宽取两行最大值 →
+		// 行 1 的"配色："标签被行 2 的复选框撑开（与下拉框之间空出 100px），行 2 又因首列 Margin 整体右移 17px。
+		// 现拆成上下两个独立栅格，各按自身内容定列宽，两行左缘对齐。
+		var tblOptHost = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
+		tblOptHost.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+		tblOptHost.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+		tblOptHost.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-		tblOpt.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-		tblOpt.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+		var tblOptRow1 = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 6, RowCount = 1, Margin = new Padding(0) };
+		for (int i = 0; i < 6; i++) tblOptRow1.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+		tblOptRow1.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+		var tblOptRow2 = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, Margin = new Padding(0) };
+		for (int i = 0; i < 3; i++) tblOptRow2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+		tblOptRow2.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 		ToolTip toolTip = new ToolTip();
 		_rbMarginOn = new RadioButton
 		{
@@ -264,7 +271,7 @@ private void BuildUi()
 		};
 		toolTip.SetToolTip(_rbMarginOff, "图框贴纸边打印，不留边距。");
 
-		_lblPrint = new Label { Text = "配色:", AutoSize = true, Margin = new Padding(0, 10, 2, 0) };
+		_lblPrint = new Label { Text = "配色：", AutoSize = true, Margin = new Padding(0, 10, 2, 0) };
 		_cmbPrint = new ComboBox
 		{
 			DropDownStyle = ComboBoxStyle.DropDownList,
@@ -276,7 +283,7 @@ private void BuildUi()
 		_cmbPrint.SelectedIndex = 0;
 		toolTip.SetToolTip(_cmbPrint, "出图配色：黑白 / 彩色。");
 
-		_lblMode = new Label { Text = "模式:", AutoSize = true, Margin = new Padding(0, 10, 2, 0) };
+		_lblMode = new Label { Text = "模式：", AutoSize = true, Margin = new Padding(0, 10, 2, 0) };
 		_cmbMode = new ComboBox
 		{
 			DropDownStyle = ComboBoxStyle.DropDownList,
@@ -288,12 +295,12 @@ private void BuildUi()
 		_cmbMode.SelectedIndex = 1;
 		toolTip.SetToolTip(_cmbMode, "通用版：逐层识别图框，通用性强。\r\n公司版：按公司模板库快速匹配，速度更快。");
 
-		tblOpt.Controls.Add(_rbMarginOn, 0, 0);
-		tblOpt.Controls.Add(_rbMarginOff, 1, 0);
-		tblOpt.Controls.Add(_lblPrint, 2, 0);
-		tblOpt.Controls.Add(_cmbPrint, 3, 0);
-		tblOpt.Controls.Add(_lblMode, 4, 0);
-		tblOpt.Controls.Add(_cmbMode, 5, 0);
+		tblOptRow1.Controls.Add(_rbMarginOn, 0, 0);
+		tblOptRow1.Controls.Add(_rbMarginOff, 1, 0);
+		tblOptRow1.Controls.Add(_lblPrint, 2, 0);
+		tblOptRow1.Controls.Add(_cmbPrint, 3, 0);
+		tblOptRow1.Controls.Add(_lblMode, 4, 0);
+		tblOptRow1.Controls.Add(_cmbMode, 5, 0);
 		// v4.1：第二行——显示线宽 + 质量核查两个选项。
 		// 并发参数沿用 v4.0 实测最优值（12/4/8），Concurrency.cs 硬编码内置、
 		// UI 不可调（曾计划并发设置数值框 + settings.json，已评估否决未落地）
@@ -305,7 +312,7 @@ private void BuildUi()
 		};
 		toolTip.SetToolTip(_chkLineWeight, "勾选后按图纸线宽显示；默认统一粗细。");
 
-		tblOpt.Controls.Add(_chkLineWeight, 0, 1);
+		tblOptRow2.Controls.Add(_chkLineWeight, 0, 0);
 		_chkQualityCheck = new CheckBox
 		{
 			Text = "质量核查",
@@ -314,7 +321,7 @@ private void BuildUi()
 			Checked = true
 		};
 		toolTip.SetToolTip(_chkQualityCheck, "开启后自动检测 PDF 内容完整性；不达标判失败并回退重出。默认开启。");
-		tblOpt.Controls.Add(_chkQualityCheck, 1, 1);
+		tblOptRow2.Controls.Add(_chkQualityCheck, 1, 0);
 		_chkBlockFrame = new CheckBox
 		{
 			Text = "识别块图框",
@@ -325,16 +332,19 @@ private void BuildUi()
 			Checked = false
 		};
 		toolTip.SetToolTip(_chkBlockFrame, "图框为块（INSERT）的图纸可启用。");
-		tblOpt.Controls.Add(_chkBlockFrame, 2, 1);
+		tblOptRow2.Controls.Add(_chkBlockFrame, 2, 0);
 
-		_grpOptions.Controls.Add(tblOpt);
+		tblOptHost.Controls.Add(tblOptRow1, 0, 0);
+		tblOptHost.Controls.Add(tblOptRow2, 0, 1);
+		_grpOptions.Controls.Add(tblOptHost);
 
 		// ---------- 3) 进度与操作（v3.9：+阶段总览条 + 当前阶段详情） ----------
 		_grpProgress = new GroupBox
 		{
 			Text = "进度",
 			Dock = DockStyle.Top,
-			Height = 165,
+			// v4.17 修订四：按钮行移出后高度 165 → 135（扣掉按钮行 30）
+			Height = 135,
 			Padding = new Padding(10, 6, 10, 4)
 		};
 		// v3.9：阶段总览条（5 芯片横排：准备→图框识别→页面设置→出图→收尾）。
@@ -412,17 +422,20 @@ private void BuildUi()
 			TextAlign = ContentAlignment.MiddleLeft,
 			Font = new Font("Microsoft YaHei UI", 8.5f),
 			ForeColor = Color.DimGray,
-			Margin = new Padding(0, 2, 0, 0)
+			Margin = new Padding(0)
 		};
 		var pctBar = new TableLayoutPanel
 		{
 			Dock = DockStyle.Top,
-			Height = 48,
+			// v4.17 修订四（P1-3）：48 → 44。两行各 22 正好；48 时 TLP 把多出的 4px 补给末行，
+			// 实测两条进度条 28px vs 33px 不等高。
+			Height = 44,
 			ColumnCount = 2,
 			RowCount = 2,
 			Margin = new Padding(0, 2, 0, 2)
 		};
-		pctBar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54));
+		// v4.17 修订四（P1-2）：54 逻辑宽放不下 8.5pt 的"阶段进度"4 字（与进度条左缘重叠 1px 被裁）→ 64
+		pctBar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 64));
 		pctBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 		pctBar.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
 		pctBar.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
@@ -430,21 +443,23 @@ private void BuildUi()
 		pctBar.Controls.Add(_progressTotal, 1, 0);
 		pctBar.Controls.Add(lblPhase, 0, 1);
 		pctBar.Controls.Add(_progressPhase, 1, 1);
-		_btnStart = new Button { Text = "开始转换", Width = 104, Height = 30, Margin = new Padding(0, 0, 8, 0) };
+		// v4.17 修订四（P1-4 + B 档·主次区分）：五个按钮统一宽 120（原 105/113/130/150 参差），
+		// 主按钮"开始转换"加粗以示主次；"打开输出文件夹"原右边距为 0，与"设置"紧贴无间隙，一并修正。
+		_btnStart = new Button { Text = "开始转换", Width = 120, Height = 30, Margin = new Padding(0, 0, 8, 0), Font = new Font("Microsoft YaHei UI", 9f, FontStyle.Bold) };
 		_btnStart.Click += delegate { Start(); };
-		_btnStop = new Button { Text = "停止", Width = 104, Height = 30, Enabled = false, Margin = new Padding(0, 0, 8, 0) };
+		_btnStop = new Button { Text = "停止", Width = 120, Height = 30, Enabled = false, Margin = new Padding(0, 0, 8, 0) };
 		_btnStop.Click += delegate
 		{
 			if (_converting) { StopRequested(); }
 			else { Continue(); }
 		};
-		_btnClear = new Button { Text = "清空清单", Width = 90, Height = 30, Margin = new Padding(0, 0, 8, 0) };
+		_btnClear = new Button { Text = "清空清单", Width = 120, Height = 30, Margin = new Padding(0, 0, 8, 0) };
 		_btnClear.Click += delegate { ClearList(); };
-		_btnOpenOut = new Button { Text = "打开输出文件夹", Width = 120, Height = 30, Enabled = false, Margin = new Padding(0, 0, 0, 0) };
+		_btnOpenOut = new Button { Text = "打开输出文件夹", Width = 120, Height = 30, Enabled = false, Margin = new Padding(0, 0, 8, 0) };
 		_btnOpenOut.Click += delegate { OpenOutputFolder(); };
 
 		// v4.3：设置按钮（独立 Form 窗口，3 Tab：质量审查/块图框/打印）
-		_btnSettings = new Button { Text = "设置…", Width = 84, Height = 30, Margin = new Padding(0, 0, 8, 0) };
+		_btnSettings = new Button { Text = "设置…", Width = 120, Height = 30, Margin = new Padding(0, 0, 8, 0) };
 		_btnSettings.Click += OpenSettings;
 		var buttonsRow = new TableLayoutPanel
 		{
@@ -462,12 +477,22 @@ private void BuildUi()
 		buttonsRow.Controls.Add(_btnClear, 2, 0);
 		buttonsRow.Controls.Add(_btnOpenOut, 3, 0);
 		buttonsRow.Controls.Add(_btnSettings, 4, 0);
-		// v3.9 布局顺序（自上而下）：阶段条 → 双进度条 → 按钮行 → 阶段详情。
+		// v3.9 布局顺序（自上而下）：阶段条 → 双进度条 → 阶段详情。
 		// WinForms Dock=Top：后 Add 的显示在最上（v3.8.1 buttonsRow→_progress 实测），故逆序 Add。
+		// v4.17 修订四（B 档·信息层级）：按钮行从"进度"组移出，独立为紧邻其下的操作条——
+		// "进度"组只承担展示语义（阶段条 + 双进度 + 阶段详情），操作按钮不再混在进度组内。
 		_grpProgress.Controls.Add(_lblPhaseDetail);
-		_grpProgress.Controls.Add(buttonsRow);
 		_grpProgress.Controls.Add(pctBar);
 		_grpProgress.Controls.Add(phaseBar);
+		Panel actionBar = new Panel
+		{
+			Dock = DockStyle.Top,
+			Height = 46,
+			Padding = new Padding(10, 8, 10, 8)
+		};
+		buttonsRow.Dock = DockStyle.Left;
+		buttonsRow.Width = 5 * 120 + 4 * 8;
+		actionBar.Controls.Add(buttonsRow);
 
 		// ---------- 4) 三栏列表区（填充剩余空间） ----------
 		// v4.8：三栏头部统一 24px 高（原成功/待处理 19px vs 失败栏 24px，表头错位）
@@ -487,7 +512,9 @@ private void BuildUi()
 		Panel pendingHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
 		pendingHeader.Controls.Add(_lblPending);
 		pendingHeader.Controls.Add(_btnCopyPending);
-		_lblSuccess = new Label { Text = "成功", Dock = DockStyle.Top, Height = 24, TextAlign = ContentAlignment.MiddleLeft };
+		// v4.17 修订四（P1-1）：与"待处理/失败"两栏统一为 Panel + AutoSize Label(Dock=Left + Padding)。
+		// 原 Dock=Top + MiddleLeft 的 Label 与另两栏对齐基准不同，截图可见"成功"两字偏上。
+		_lblSuccess = new Label { Text = "成功", Dock = DockStyle.Left, AutoSize = true, Padding = new Padding(0, 4, 8, 0) };
 		_lblFail = new Label { Text = "失败", Dock = DockStyle.Left, AutoSize = true, Padding = new Padding(0, 4, 8, 0) };
 		_btnCopyFailed = new Button
 		{
@@ -520,9 +547,11 @@ private void BuildUi()
 		Panel pendingPanel = new Panel { Dock = DockStyle.Fill };
 		pendingPanel.Controls.Add(_gridPending);
 		pendingPanel.Controls.Add(pendingHeader);
+		Panel successHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
+		successHeader.Controls.Add(_lblSuccess);
 		Panel successPanel = new Panel { Dock = DockStyle.Fill };
 		successPanel.Controls.Add(_gridSuccess);
-		successPanel.Controls.Add(_lblSuccess);
+		successPanel.Controls.Add(successHeader);
 		_splitBottom = new SplitContainer
 		{
 			Orientation = Orientation.Vertical,
@@ -577,8 +606,11 @@ private void BuildUi()
 			ForeColor = Color.DimGray
 		};
 		Panel logHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
-		logHeader.Controls.Add(_chkAutoScroll);
+		// v4.17 修订四（P0-1）：WinForms 的 Dock 布局按 z-order **逆序**处理（后 Add 的先占位）。
+		// 原顺序先 Add(Dock=Right 复选框) 再 Add(Dock=Top 标题)，标题先吃满整行 →
+		// 复选框只剩 2~3px 高（实测 108×3），开关实际不可见不可点。必须标题先 Add。
 		logHeader.Controls.Add(_lblLogTitle);
+		logHeader.Controls.Add(_chkAutoScroll);
 		Panel logPanel = new Panel { Dock = DockStyle.Fill };
 		logPanel.Controls.Add(_txtLog);
 		logPanel.Controls.Add(logHeader);
@@ -600,6 +632,7 @@ private void BuildUi()
 
 		// Dock 布局：Fill 先加，顶部组依次，状态栏最后（占据最底部）
 		base.Controls.Add(_splitLog);
+		base.Controls.Add(actionBar);
 		base.Controls.Add(_grpProgress);
 		base.Controls.Add(_grpOptions);
 		base.Controls.Add(_grpInput);
@@ -627,6 +660,8 @@ private void BuildUi()
 				_initialListSplitterSet = true;
 			}
 			UpdateListBounds();
+			// v4.17 修订四：窗口打开时不预置焦点——否则"设置…"按钮会带蓝色焦点框，看起来像默认操作
+			ActiveControl = null;
 		};
 		Shown += async (senderForm, e) => await RunFirstUseSelfCheckAsync();
 		SetPhaseBarIdle();
@@ -701,6 +736,15 @@ private void BuildUi()
 		// 现在列宽可自由压缩到栏宽，长文本鼠标悬停看 Tooltip（DataGridView 默认开启）。
 		g.Columns["note"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 		g.Columns["note"].MinimumWidth = 70;
+		// v4.17 修订四（P2-6）：空列表绘制"暂无文件"占位（DataGridView 无内置空状态）
+		g.Paint += delegate (object sender, PaintEventArgs e)
+		{
+			if (g.Rows.Count > 0) return;
+			Rectangle r = new Rectangle(0, g.ColumnHeadersHeight, g.ClientSize.Width,
+				Math.Max(0, g.ClientSize.Height - g.ColumnHeadersHeight));
+			TextRenderer.DrawText(e.Graphics, "暂无文件", g.Font, r, Color.Silver,
+				TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+		};
 		return g;
 	}
 
@@ -935,7 +979,12 @@ private void BuildUi()
 		{
 			AddRow(path, StatusFor(path));
 		}
-		_txtInput.Text = (_pendingFiles.Count == 0) ? "" : "已添加 " + _pendingFiles.Count + " 个 .dwg 文件";
+		// v4.17 修订四（P2-5）：原操作提示塞在 GroupBox 标题里（22 字），标题瘦身后迁到空清单时的输入框内。
+		bool inputEmpty = _pendingFiles.Count == 0;
+		_txtInput.Text = inputEmpty
+			? "支持拖拽文件到窗口、Ctrl+V 粘贴（Ctrl+Z 撤销）"
+			: "已添加 " + _pendingFiles.Count + " 个 .dwg 文件";
+		_txtInput.ForeColor = inputEmpty ? Color.Gray : SystemColors.ControlText;
 		// v3.9（双进度条）：总/阶段进度条归零（Maximum 固定 100，总进度按阶段权重驱动，不再按文件数）
 		if (_progressTotal != null) _progressTotal.Value = 0;
 		if (_progressPhase != null) _progressPhase.Value = 0;
