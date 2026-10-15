@@ -103,3 +103,13 @@
 - 判别：同代理 `curl https://api.github.com` = 200、`curl https://github.com` = 502
   ⇒ 故障在代理对 github.com 的 CONNECT，与 git/凭证无关。**处置：原样 `git push` 重试即通**
   （当日第三次起连推 76b9be4 / 27ff693 均成）；勿急着改代理配置（与 GEN-GIT-002 同源）。
+## F17 手册 6.5「宿主无桌面会话」前提已失效（2026-10-15 实测）
+- 原文（第6章 6.5）：宿主环境启动 DwgToPdf.exe 无窗口（发布版同样）；判定为环境限制非代码问题。
+- 实测（发布版 exe v4.17，16:44:16 启动，5s 后观测）：进程 ALIVE、Responding=True、
+  MainWindowHandle=201130（非 0 = 顶层窗口已创建）、Session=1、标题「DWG 批量转 PDF（AutoCAD 驱动） v4.17」。
+- 环境证据：explorer.exe / node.exe（智能体运行时）/ bash.exe（工具 shell）全在 Console 会话 1、
+  SESSIONNAME=Console ⇒ 宿主存在交互式桌面会话，GUI 可直接视觉验证。
+- 溯源：git log -S「无桌面会话」仅命中 c711ec3（10-07 首次入库）⇒ v3.x 沙箱时代旧记录，从未复核。
+- 处置：手册 6.5 加【更正声明】（附实测数据）、6.6 经验②与 6.10 根因句加前提更正指引、
+  速查表该行标「已过时」；experiences/lessons.md 附录同步同文。
+- 结论：6.5 的「现象/判定」仅对无桌面沙箱宿主成立；当前宿主（用户真机 + 智能体同会话）不适用。

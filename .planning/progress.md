@@ -107,3 +107,11 @@
 - experiences/说明.txt 与 handoff.md 计数同步（12 条、GEN-WIN×4、255KB/3394 行）
 - 口径订正：字节数一律按十进制 KB（254,983B=255KB），勿按 KiB（会得出 249KB 的倒退值）
 - 本提交即 .planning 交接刷新；推送后 HEAD 与 origin/main 同步，最终哈希见当日 memory 日志
+## 2026-10-15 会话七（手册 6.5 真伪核查与更正）
+- 用户问「手册 6.5 记录是真是假」→ 实测判定：**假 / 已过时**（当前宿主有桌面会话）
+- 证据：explorer.exe / node.exe（智能体）/ bash.exe 全在 Console 会话 1；启动发布版 exe 5s 后
+  ALIVE、Responding=True、MainWindowHandle=201130、Session=1、标题正常 ⇒ 窗口能弹出
+  （用户选定「先实测再订正」后执行；窗口当前仍在用户屏幕上，PID 35816）
+- 订正：手册 6.5 加【更正声明 · 2026-10-15】（附实测数据）；6.6 经验②、6.10 根因句加前提更正指引；
+  速查表该行标注「已过时」；lessons.md 附录同步同文（仓库外，不随 git）
+- findings 新增 F17；手册（仓库内）随本次提交入库

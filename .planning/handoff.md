@@ -80,7 +80,7 @@
 - [x] **用户实测验收通过**（10-15 用户确认「通过」）；经验文件 `experiences/lessons.md` 已创建
   （12 条正式条目：GEN-WIN×4 / GEN-TEST×2 / GEN-GIT×2 / PRJ×4，`lessons.py check`/`toc` 通过；
   文件在工作区根、仓库 `Dwg-To-PDF/` 之外，不随仓库提交）；10-15 14:05 已把完整经验手册全文
-  合并为文末附录（255KB/3394 行，供后续 ima 单文件上传；手册原文仍在仓库内维护）
+  合并为文末附录（256KB/3402 行，供后续 ima 单文件上传；手册原文仍在仓库内维护）
 - [x] 规则七.2：专门版本变更记录 `Dwg-To-PDF/版本变更记录.txt`（版本总账 + 关键决策 D1~D4 + git 里程碑）已建库提交（76b9be4），笔误订正（f1c173a）
 - [x] 规则二.4：`experiences/说明.txt` 已建（目录定位/结构与文件用途/lessons.py view·check·toc·stats 用法/新增经验纪律/ima 上传计划；experiences/ 在仓库外，不随 git 提交）
 - [x] ima 上传就绪：`experiences/lessons.md` 253,721 字节 ≤10MB，check 11 条全过；流程 preflight→check_repeated_names→create_media→COS→add_knowledge（需 IMA 凭证），时机由用户定
