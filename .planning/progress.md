@@ -194,3 +194,27 @@
 - **新发现（非本次引入）**：`--dirp` 的「-2 目录非空」断言不递归 → 输入含子目录必然假失败（详见 task_plan E19）
 - 文档同步：手册 **5.11** / 说明 **第十七节** / 运行说明 **第十八节** / 版本变更记录（修订六行 + D7 + 事件）
 - 经验库：**本批暂未写正式条目**（dev-lessons 规则：先验收后记录）→ 已弹窗待验收
+
+## 2026-10-15 会话十一 · C1 验收被驳回 → 进度条缓动修复（修订六·补）
+- 用户驳回原话：**「进度条不是流动状态，而是突然变化。分支前的就是流动的。」**
+  → 定性：**功能回退**，不是风格差异。系统 `msctls_progress32` 在 `PBM_SETPOS` 时自带位置过渡动画，
+  换自绘控件后变成"瞬间跳到新值"；而本工程进度是几十秒才变一次的粗粒度更新，跳变因此格外刺眼。
+- 修复（`源码工程/FlatProgressBar.cs`）：`Value` 仍是**目标值**语义（13 处调用点一行未改），
+  另加**只用于绘制**的 `_displayValue`(double) + `System.Windows.Forms.Timer`(15ms ≈ 66fps)
+  + **ease-out cubic**（`1-(1-p)^3`），时长 `Min(420, Max(140, 120+位移*2.5))` ms；
+  **百分比数字仍显示目标值**（真实进度），只有填充长度在滑动。
+  护栏：`StartAnimation()` 先判 `!IsHandleCreated || InvokeRequired` 直接落定；`Dispose(bool)` 停表并释放。
+  调用链核实：`new Progress<ProgressUpdate>(ApplyUpdate)` 在 UI 线程构造 → 回调必回 UI 线程 → 动画不会被短路。
+- 验证链：编译 **0 警告 0 错误** → SelfTest **108/108 PASS**（exit 0）→ exe 重发布 **md5 = 5752902419bd017d5a466fec885c79ec**
+  → 组件预览工程内**逐帧像素采样**（每 15ms `DrawToBitmap` 量中间一行"填充色"像素宽度）：
+  0→100% 用 **375ms 走完 25 帧**（0/42/84/121/…/362px，每帧 ≤15px）；100→25% 用 300ms 反向滑回；
+  25→50 / 50→75 / 75→100 各约 170~190ms。**有中间帧 = 流动，非突变**。
+- 新增工具：`_测试输出/UI评审/_c1预览/AnimProbe.csproj` + `AnimProbeForm.cs`（时序探针，输出 `anim_timeline.csv`）
+- **排查插曲（结论：产品无影响）**：探针首步目标值读出 `57599` 而非 0 → 追查发现**临时新建的 net48 小工程**
+  读 RVA 常量数组会读到垃圾值；`PlatformTarget=x64` 或 net8.0 正常。临时在 `Program.Main` 首行挂 `BlobDiag.Dump()`
+  在**主程序进程内**实测 `PhaseOrder`/`PaperLongMm`/`RasterDpiChoices` + 现场构造的 int[]/double[] **全部正确**；
+  删诊断重建后 exe **md5 复原一致**（零残留）。SelfTest 亦正确（其 108 条含 `PageSpec.Resolve` 断言，
+  直接依赖 `PaperLongMm`）。→ 详见手册 5.11「环境观察」与 task_plan E20。
+- 文档同步：手册 **5.11 纪律④ + 环境观察** / 说明 **第十七节「修订六·补」**（并把"不加动画"一条标注作废）/
+  运行说明 **第十八节「修订六·补」** / 版本变更记录（修订六·补行 + 18:3x 事件）
+- 用户同时拍板：`--dirp` 断言缺陷**修**（加 `SearchOption.AllDirectories`），**修完继续 C2**

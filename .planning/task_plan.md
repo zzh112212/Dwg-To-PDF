@@ -65,17 +65,23 @@ phase8.9 —— **v4.17 修订六（C 档·第一批 C1：设计令牌 + 自绘�
 | E17 | `logHeader` 先 Add(Dock=Right 复选框) 再 Add(Dock=Top 标题) → 复选框被压成 108×3px，v4.15 的"自动滚动"开关静默失效（无报错、肉眼几乎不可见） | **WinForms Dock 按 z-order 逆序布局（后 Add 的先占位）**：同容器内 "Top 标题 + Right 按钮" 必须**标题先 Add**；UI 缺陷一律用控件树 dump 复测尺寸，不能只靠看截图 |
 | E18 | 修订四把选项区两行拆成嵌套 TableLayoutPanel（子表 Dock=Fill 落在 AutoSize 行内）→ 子表被撑到 955×125（100 逻辑像素高），行 2 三开关被顶到 y=327（分组只到 y=279）、整行不可见；子表 `IsWindowVisible` 仍为 True，看不出问题 | **AutoSize 行/列内禁止放 Dock=Fill 子容器**；要「某行不参与列宽计算」用 ColumnSpan 跨满 + FlowLayoutPanel。UI 验收须「尺寸比对 + 截图」双证据并**逐分区**核对，不能只核对本次动过的控件 |
 | E19 | `SelfTest --dirp` 报 `-2 目录非空 :: pdfs=0`，但递归计数 -2 目录里其实有 40 个 PDF | 断言用**不递归**的 `Directory.GetFiles(dir,"*.pdf")`，而输出**保留输入的子目录结构** → 输入语料含子目录时必然假失败（既有缺陷，非 C1 引入）。判定"与本次改动无关"的省力证据 = 查 `自测试工程/SelfTest.csproj` 的 `Compile Include` 白名单：本次改的 5 个文件命中数全为 0，SelfTest.exe 编译源与基线一致 → 该结果不可能由本次改动引起（比"重跑基线"快，比"凭感觉说无关"可靠） |
+| E20 | 临时新建的 net48 小工程读 RVA 常量数组读到垃圾值：`new[]{10,20,30}` → `{57599,20,30}`、`new double[]{297.0,420.0,594.0}` → `{302.06…,420,594}`；垃圾值跨进程稳定（57599=0xE0FF），元素 0/1 随机 | 加 `<PlatformTarget>x64</PlatformTarget>` 或改目标 net8.0 即正常；**主工程 exe 与 SelfTest.exe 实测全部正确**。已排除沙箱/LangVersion/ReferenceAssemblies 包/PE 节属性/文件内 blob 字节；机制指向 **AnyCPU(I386+ILONLY) 镜像作主模块被提升为 64 位时的 RVA 字段处理**，产品无恙故未深挖。**纪律：不要拿一次性小工程的读数质疑产品**——判定产品须在**产品进程内**验证（本次：临时在 `Program.Main` 首行挂 `BlobDiag.Dump()` 写 %TEMP%，跑完删文件重建，md5 复原一致=零残留） |
 
 ## Next Step（单一动作）
-**等待用户验收 C1** —— 视觉取证已备齐（`_测试输出/UI评审/`）：
-`c1_main.png` + `c1_main_zoom1~3.png`（阶段胶囊 / 双进度条 / 按钮行）、`c1_states.png`（胶囊五态 + 进度条 0/37/100%）、
-`c1_states_96dpi.png`（96 DPI 路径）、`c1_controls.txt`（控件树）、`c1_btn_enabled/disabled.png`（禁用态对比）。
-验收通过后：① 按 dev-lessons 写正式经验条目（本批暂未写，规则要求先验收）；② 进入 **C2**
-（CardPanel 卡片式分区 + 三栏状态点/计数徽标 + §5.7 设置按钮移位）。
-用户待决事项（3 项）：① 是否修 `--dirp` 的假失败断言（1 行改动：`GetFiles` 加 `SearchOption.AllDirectories`）；
-② 是否 push 分支 `ui-optimization`；③ 是否把 `experiences/lessons.md` 上传 ima 知识库（现 17 条 / 约 263KB，需 IMA 凭证）。
-分支：**`ui-optimization`** —— 修订五 `b717d69`、`.planning` 记录 `012a4ec`、C1 见本次提交；
-`main` 保持只到修订四。**未推送**（push 需用户明确指令）。
+**修 `--dirp` 断言 → 提交 → 进入 C2**（用户 10-15 已拍板：「修（推荐）」+「修完之后继续 C2」）。
+- ① 修断言：`自测试工程/Program.cs` 里「-2 目录非空」的 `Directory.GetFiles(dir,"*.pdf")`
+  加 `SearchOption.AllDirectories`（输出保留输入子目录结构，必须递归计数）；
+  同步 `自测试工程/说明.txt`；跑 `--dirp` 复验（40 张语料应 40/40）。
+- ② 提交：C1 验收驳回修复（进度条缓动）单独一个 commit；断言修复再一个 commit。
+- ③ 然后 C2：`CardPanel` 卡片式分区（白底 + 12px 圆角 + 0.5px #D3D1C7 描边）、
+  7 个 GroupBox 卡片化、三栏列表状态点 + 计数徽标、失败行浅红底 + 截断备注 + 点击展开只读详情，
+  以及设计稿 §5.7「设置…」移到标题行右上角齿轮。
+- 用户待决事项（3 项）：① 是否 push 分支 `ui-optimization`；② 是否把 `experiences/lessons.md`
+  上传 ima 知识库（现 17 条 / 约 263KB，需 IMA 凭证）；③ 是否保留 `_测试输出/UI评审/` 工具链。
+- 分支：**`ui-optimization`** —— 修订五 `b717d69`、`.planning` 记录 `012a4ec`、C1 `b8a3941`、
+  修订六·补见本次提交；`main` 保持只到修订四。**未推送**（push 需用户明确指令）。
+- 验收提醒：C1 已被驳回一次（"进度条不是流动状态"）→ 修订六·补已按手册 5.11 纪律④修复；
+  **重新验收前先让用户看进度条在真实转换中的滑动手感**。
 ## 历史归档
 10-07「PISCES 发浅」协作期（含 CodeBuddy ⇄ TRAE 双向协议、F1~F9 实测）已完成闭环：
 用户 10-07 验收「深浅可以」，结论以 `Dwg-To-PDF/DwgToPdf完整经验手册.md` 第 20~31 章为准，
