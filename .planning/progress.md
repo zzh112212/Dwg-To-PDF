@@ -77,3 +77,13 @@
   （GEN-WIN×3 / GEN-TEST×2 / GEN-GIT×2 / PRJ×4），lessons.py check 通过、toc 目录重建
 - .planning 四件套刷新（handoff 重写、task_plan/progress/findings 更新）并提交
 - 下一节点：等待用户提下一版本优化计划（需求明确前不动手）
+
+## 2026-10-15 会话五（手册合并进经验文件）
+- 用户要求把 `Dwg-To-PDF/DwgToPdf完整经验手册.md`（v3.7~v4.17 全文，3259 行/243KB）合并进
+  `experiences/lessons.md`，为后续上传 ima 做准备（ima 上传物 = 单文件）
+- 合并方式：手册全文作「附录」追加在 lessons.md 文末；手册标题整体降两级
+  （章 ##→####、节 ###→#####）——因为 `### ` 在 lessons.md 中专用于带 ID 的条目行，
+  lessons.py check 会校验该格式；EOL 统一 CRLF（toc 在 Windows 文本模式写回的稳态）
+- 结果：3384 行/253KB；check 通过（11 条正式条目无损）、toc 重建正常、附录占 96.7%
+- 定位：条目库=速查索引（三要素），附录=完整证据链；原文仍在 git 仓库内维护，
+  更新时以 lessons.md 为 ima 上传源
