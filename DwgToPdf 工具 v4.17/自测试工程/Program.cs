@@ -564,7 +564,9 @@ namespace DwgToPdf.SelfTest
             string f2 = System.IO.Path.Combine(outDir, "PDF-09：08：07-2");
             Assertion.True(System.IO.Directory.Exists(f1), "v4.17 修订三 dirp 第一批落在 PDF-09:08:07");
             Assertion.True(System.IO.Directory.Exists(f2), "v4.17 修订三 dirp 第二批追加 -2 后缀（同秒不覆盖）");
-            Assertion.True(System.IO.Directory.GetFiles(f2, "*.pdf").Length > 0, "v4.17 修订三 dirp -2 目录非空", "pdfs=" + System.IO.Directory.GetFiles(f2, "*.pdf").Length);
+            // v4.17 修订六·补：输出**保留输入的子目录结构**，计数必须递归（否则输入含子目录时必然假失败）
+            int f2Pdfs = System.IO.Directory.GetFiles(f2, "*.pdf", System.IO.SearchOption.AllDirectories).Length;
+            Assertion.True(f2Pdfs > 0, "v4.17 修订三 dirp -2 目录非空", "pdfs=" + f2Pdfs);
             Assertion.True(!System.IO.Directory.Exists(System.IO.Path.Combine(outDir, "PDF-09：08：07-3")),
                 "v4.17 修订三 dirp 不会多出 -3（只跑了两轮）");
         }
@@ -607,7 +609,8 @@ namespace DwgToPdf.SelfTest
             string pdfFolder1 = FindPdfFolder(outDir);
             Assertion.True(pdfFolder1 != null, "dirs 第一轮产出了 PDF", "null");
             if (pdfFolder1 == null) return;
-            foreach (var pdf in System.IO.Directory.GetFiles(pdfFolder1, "*.pdf"))
+            // v4.17 修订六·补：同 --dirp，输出保留子目录结构 → 必须递归
+            foreach (var pdf in System.IO.Directory.GetFiles(pdfFolder1, "*.pdf", System.IO.SearchOption.AllDirectories))
                 stampBefore[pdf] = System.IO.File.GetLastWriteTimeUtc(pdf);
 
             Console.WriteLine("[dirs] 第二轮：模拟“新增图纸后再次点击转换”…");
@@ -633,7 +636,7 @@ namespace DwgToPdf.SelfTest
             string pdfFolder2 = FindPdfFolder(outDir);
             int newPdfs = 0;
             if (pdfFolder2 != null)
-                foreach (var pdf in System.IO.Directory.GetFiles(pdfFolder2, "*.pdf"))
+                foreach (var pdf in System.IO.Directory.GetFiles(pdfFolder2, "*.pdf", System.IO.SearchOption.AllDirectories))
                     if (!stampBefore.ContainsKey(pdf)) newPdfs++;
             Assertion.True(newPdfs >= 1, "v4.17 修订三 需求① 端到端：新增图纸确实转出了 PDF", "newPdfs=" + newPdfs);
             Assertion.True(pdfFolder2 != null && pdfFolder2 != pdfFolder1,
