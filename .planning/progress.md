@@ -97,3 +97,13 @@
 - lessons.py check/view 复核：11 条正式条目 + 手册附录完整（253,721 字节）
 - 环境经验入 MEMORY.md 工程机制节：代理 502 是瞬时态，原样重试即可，勿急着改代理配置
 - 用户规则台账：七.2 ✓ 二.4 ✓；遗留 = 用户择机 ima 上传 lessons.md + 等待下一版本优化计划
+## 2026-10-15 会话六·交接刷新（context-continuity 技能触发，用户主动交接）
+- task_plan：Current Phase 刷至 HEAD=27ff693 + 规则台账 + ima 节点；D10 补「公司电脑 HTTPS 可直推」纠正注记；
+  错误表新增 E16（追加写死 CRLF 致 memory 日志混入 CRLF，已升华 GEN-WIN-004）；Next Step 补 ima 上传事项
+- findings：F7 补纠正注记（SSH 结论仅限个人机）；新增 F16（推送重试与代理实况：出口 127.0.0.1:50486，
+  github.com CONNECT 瞬 502 而 api.github.com 通 200 ⇒ 原样重试即通，勿改代理配置）
+- lessons.md（仓库外）：新增 GEN-WIN-004（追加写入前先探测行尾稳态；本项目三类文件三种稳态：
+  memory=LF 无 BOM / .planning=CRLF（progress 另带 BOM）/ 仓库 txt=BOM+CRLF）；条目 11→12，toc/check 通过
+- experiences/说明.txt 与 handoff.md 计数同步（12 条、GEN-WIN×4、255KB/3394 行）
+- 口径订正：字节数一律按十进制 KB（254,983B=255KB），勿按 KiB（会得出 249KB 的倒退值）
+- 本提交即 .planning 交接刷新；推送后 HEAD 与 origin/main 同步，最终哈希见当日 memory 日志

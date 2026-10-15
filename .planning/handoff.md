@@ -2,7 +2,7 @@
 
 交接简报。**接收方是零上下文的新会话，本文件必须自包含。**
 
-- 更新时间：2026-10-15 15:25
+- 更新时间：2026-10-15 16:10
 - 计划文件：`.planning/task_plan.md`（阶段/决策/错误表）
 
 ## Task
@@ -44,7 +44,7 @@
 - 编译 0 警告 0 错误（主工程 + 自测工程）；SelfTest **108/108 PASS、退出码 0**。
 - 全量回归 115 张 → **113 成功 / 2 失败**（2 张 H77 风扇件为既有问题，与手册第30章基线一致）；113 张 PDF 墨迹测量：0 空页、最小边距 5.40mm、无 <3mm。
 - 版本号回退完成（用户 13:09 明确「本轮的改动不升版本」）：93 处 v4.18 标注全部改为「v4.17 修订三」；exe 13:15 重新发布并核验。
-- **git 已闭环**：提交 `8974e8f`（138 文件，+5989/-5440：v4.17 全量 82 文件入库，其中 48 个文件被 git 识别为 v4.15→v4.17 重命名、50 个纯删；.planning 四件套 + 手册）并推送；其后 `3c6937c`（.planning 验收通过）、`ea50c40`（手册合并记录）、`76b9be4`（版本变更记录.txt，规则七.2）、`f1c173a`（版本记录笔误订正）均已推送，main 与 origin/main 同步。
+- **git 已闭环**：提交 `8974e8f`（138 文件，+5989/-5440：v4.17 全量 82 文件入库，其中 48 个文件被 git 识别为 v4.15→v4.17 重命名、50 个纯删；.planning 四件套 + 手册）并推送；其后 `3c6937c`（.planning 验收通过）、`ea50c40`（手册合并记录）、`76b9be4`（版本变更记录.txt，规则七.2）、`f1c173a`（版本记录笔误订正）、`27ff693`（.planning 收尾刷新）均已推送，main 与 origin/main 同步；本次交接刷新（E16/F16 入册 + 条目 11→12 + 计数同步）将再产生一个 .planning 提交，见 progress.md「会话六·交接刷新」。
 - 阶段进度：8.6/8.6 完成（见 task_plan.md Phases）。
 
 ## What Was Tried
@@ -78,9 +78,9 @@
 - [x] 五份文档同步（运行说明 / 手册第32章 / 源码说明 / 说明.txt / 自测试工程说明）
 - [x] git 提交 `8974e8f` 并推送，main 与 origin/main 同步
 - [x] **用户实测验收通过**（10-15 用户确认「通过」）；经验文件 `experiences/lessons.md` 已创建
-  （11 条正式条目：GEN-WIN×3 / GEN-TEST×2 / GEN-GIT×2 / PRJ×4，`lessons.py check`/`toc` 通过；
+  （12 条正式条目：GEN-WIN×4 / GEN-TEST×2 / GEN-GIT×2 / PRJ×4，`lessons.py check`/`toc` 通过；
   文件在工作区根、仓库 `Dwg-To-PDF/` 之外，不随仓库提交）；10-15 14:05 已把完整经验手册全文
-  合并为文末附录（253KB/3384 行，供后续 ima 单文件上传；手册原文仍在仓库内维护）
+  合并为文末附录（255KB/3394 行，供后续 ima 单文件上传；手册原文仍在仓库内维护）
 - [x] 规则七.2：专门版本变更记录 `Dwg-To-PDF/版本变更记录.txt`（版本总账 + 关键决策 D1~D4 + git 里程碑）已建库提交（76b9be4），笔误订正（f1c173a）
 - [x] 规则二.4：`experiences/说明.txt` 已建（目录定位/结构与文件用途/lessons.py view·check·toc·stats 用法/新增经验纪律/ima 上传计划；experiences/ 在仓库外，不随 git 提交）
 - [x] ima 上传就绪：`experiences/lessons.md` 253,721 字节 ≤10MB，check 11 条全过；流程 preflight→check_repeated_names→create_media→COS→add_knowledge（需 IMA 凭证），时机由用户定
@@ -97,7 +97,7 @@
 ## Open Questions
 
 1. （已关闭）v4.17 修订三实测验收：用户 10-15 确认「通过」，正式经验条目已写入
-   `experiences/lessons.md`（11 条；dev-lessons 流程闭环）。
+   `experiences/lessons.md`（12 条；dev-lessons 流程闭环）。
 2. （已澄清）「工作日志」不存在独立文件，`运行日志/DwgToPdf_后台日志_*.txt` 由程序自动追加，无需手工同步。
 3. **下一节点**：用户将提「下一版本优化计划」——需求到达前不动手（用户规则：95% 把握再执行）；
    新版本开工前先 `lessons.py view` 查经验库并过一遍 PRJ-001~004。

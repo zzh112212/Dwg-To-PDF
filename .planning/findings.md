@@ -56,7 +56,7 @@
 - accoreconsole **不支持中文路径**：源图复制到 ASCII 临时目录，**永不打开源文件**
 - `git check-ignore`：**带中间斜杠的规则锚定到仓库根**，须写单段 `运行日志/`；
   改完必须 `git check-ignore -v --no-index -- <路径>` 验证
-- GitHub：HTTPS(443) 重置、**SSH(22) 通** ⇒ 走 SSH 推送
+- GitHub：HTTPS(443) 重置、**SSH(22) 通** ⇒ 走 SSH 推送（**10-15 纠正注记见 F15/F16：公司电脑 HTTPS 经本地代理可直推，本条仅限个人机网络**）
 
 ## F8 语料与回归基线
 - 语料 **174 张**（166 + 2026-10-07 新增 8 张 PISCES），指纹 `_探针\语料基线.txt`
@@ -96,3 +96,10 @@
   重命名"（相似度 68%~100%），仅 50 个纯删 ⇒ 版本演进脉络以 rename 形式保留，勿手工拆成删+增。
 - **提交前必查**：`git add -n` 预演文件数与类型（防 bin/obj/PDF/日志混入）；
   历史惯例 = 发布目录跟踪 exe+config+lsp+json+运行说明.txt（v4.15/v4.16 均如此）。
+## F16 推送重试与代理实况（2026-10-15 实测）
+- 出口 = 本地代理 `127.0.0.1:50486`（环境变量 HTTP(S)_PROXY；git 未单独配置 proxy）。
+- 推送可能瞬败：① schannel `server closed abruptly (missing close_notify)`；
+  ② 代理 `CONNECT tunnel failed, response 502`（github.com 隧道不通）。
+- 判别：同代理 `curl https://api.github.com` = 200、`curl https://github.com` = 502
+  ⇒ 故障在代理对 github.com 的 CONNECT，与 git/凭证无关。**处置：原样 `git push` 重试即通**
+  （当日第三次起连推 76b9be4 / 27ff693 均成）；勿急着改代理配置（与 GEN-GIT-002 同源）。
