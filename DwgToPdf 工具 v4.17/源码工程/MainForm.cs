@@ -48,9 +48,11 @@ internal sealed partial class MainForm : Form
 	private Button _btnSettings;
 	private AppSettings _appSettings;
 
-	private ProgressBar _progressTotal;
+	// v4.17 修订六（C 档）：系统经典绿块 ProgressBar 换为自绘扁平圆角进度条。
+	// 两者 Minimum/Maximum/Value 语义一致，故本文件内既有的 Value 赋值点无需改动。
+	private FlatProgressBar _progressTotal;
 
-	private ProgressBar _progressPhase;
+	private FlatProgressBar _progressPhase;
 
 	// v3.9（双进度条）：总进度按阶段权重推进。5 阶段权重（准备/识别/页面设置/出图/收尾），合计 100。
 	private static readonly int[] _phaseWeights = { 10, 25, 30, 30, 5 };
@@ -139,7 +141,8 @@ internal sealed partial class MainForm : Form
 		"收尾：清理 Activity Insights 残留进程、副本与临时文件、汇总日志"
 	};
 
-	private Label[] _phaseChips;
+	// v4.17 修订六（C 档）：5 个"白底方框 Label"换为自绘胶囊条（PhaseChipBar.cs）。
+	private PhaseChipBar _phaseBar;
 
 	private Label _lblPhaseDetail;
 
@@ -166,7 +169,7 @@ internal sealed partial class MainForm : Form
 	{
 		_baseTitle = "DWG 批量转 PDF（AutoCAD 驱动） " + Program.Version;
 		Text = _baseTitle;
-		Font = new Font("Microsoft YaHei UI", 9f);
+		Font = UiTheme.FontBody;
 		base.ClientSize = new Size(760, 680);
 		// v4.17 修订四（P1-6）：原来未设最小尺寸，窗口可被拖到布局崩坏（三栏/按钮行挤成一团）
 		MinimumSize = new Size(800, 660);
@@ -210,14 +213,14 @@ private void BuildUi()
 		tblInput.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
 
 		var lblInput = new Label { Text = "待转换文件", TextAlign = ContentAlignment.MiddleLeft, Dock = DockStyle.Fill };
-		_txtInput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5), BackColor = Color.FromArgb(247, 247, 247) };
+		_txtInput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5), BackColor = UiTheme.ReadOnlyBackground };
 		_btnInput = new Button { Text = "添加文件…", Width = 96, Height = 28, Margin = new Padding(4, 6, 2, 6) };
 		_btnInput.Click += delegate { AddFilesDialog(); };
 		_btnInputFolder = new Button { Text = "添加文件夹…", Width = 110, Height = 28, Margin = new Padding(2, 6, 4, 6) };
 		_btnInputFolder.Click += delegate { AddFolderDialog(); };
 
 		var lblOutput = new Label { Text = "输出文件夹", TextAlign = ContentAlignment.MiddleLeft, Dock = DockStyle.Fill };
-		_txtOutput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5), BackColor = Color.FromArgb(247, 247, 247) };
+		_txtOutput = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, Margin = new Padding(4, 5, 4, 5), BackColor = UiTheme.ReadOnlyBackground };
 		_btnOutput = new Button { Text = "浏览…", Width = 96, Height = 28, Margin = new Padding(4, 6, 4, 6) };
 		_btnOutput.Click += delegate { PickFolder(_txtOutput, "选择放置生成的 PDF 的输出文件夹"); };
 
@@ -359,36 +362,16 @@ private void BuildUi()
 			Height = 135,
 			Padding = new Padding(10, 6, 10, 4)
 		};
-		// v3.9：阶段总览条（5 芯片横排：准备→图框识别→页面设置→出图→收尾）。
-		// 运行前完整展示让用户知道后续步骤；运行中当前阶段高亮、完成变绿、跳过置灰。
-		var phaseBar = new TableLayoutPanel
+		// v3.9：阶段总览条（5 段横排：准备→图框识别→页面设置→出图→收尾）。
+		// 运行前完整展示让用户知道后续步骤；运行中当前阶段高亮、完成变绿、跳过转警告色。
+		// v4.17 修订六（C 档·P3-3）：由"5 个白底方框 Label"改为自绘胶囊条（PhaseChipBar）——
+		// 方框造型被读成"5 个禁用输入框"，胶囊 + 连接线才读得出"流程进度"。
+		_phaseBar = new PhaseChipBar(PhaseNames, PhaseTooltips)
 		{
 			Dock = DockStyle.Top,
-			Height = 26,
-			ColumnCount = 5,
-			RowCount = 1,
+			Height = UiTheme.HeightPhaseChip,
 			Margin = new Padding(0, 0, 0, 4)
 		};
-		for (int i = 0; i < 5; i++) phaseBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20));
-		phaseBar.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-		_phaseChips = new Label[5];
-		ToolTip phaseToolTip = new ToolTip();
-		for (int i = 0; i < 5; i++)
-		{
-			var chip = new Label
-			{
-				Text = PhaseNames[i],
-				TextAlign = ContentAlignment.MiddleCenter,
-				Dock = DockStyle.Fill,
-				Margin = new Padding(2, 1, 2, 1),
-				BorderStyle = BorderStyle.FixedSingle,
-				AutoEllipsis = true,
-				Font = new Font("Microsoft YaHei UI", 8.5f)
-			};
-			phaseToolTip.SetToolTip(chip, PhaseTooltips[i]);
-			_phaseChips[i] = chip;
-			phaseBar.Controls.Add(chip, i, 0);
-		}
 		// v3.9：当前阶段详情（替代原"正在准备…"弹窗文字，随阶段实时刷新）
 		_lblPhaseDetail = new Label
 		{
@@ -396,35 +379,40 @@ private void BuildUi()
 			Height = 18,
 			Text = "就绪：添加 dwg 文件、选择输出文件夹后点击“开始转换”。",
 			TextAlign = ContentAlignment.MiddleLeft,
-			Font = new Font("Microsoft YaHei UI", 8.5f),
-			ForeColor = Color.DimGray,
+			Font = UiTheme.FontSmall,
+			ForeColor = UiTheme.TextMuted,
 			Margin = new Padding(0, 1, 0, 0)
 		};
 		// v3.9（双进度条）：总进度条 + 阶段进度条，各带左侧语义标签。
 		// 总进度=整个批次按阶段权重推进（用户感知整体走到哪）；阶段进度=当前阶段内 x/y。
 		// v3.5.1：进度条 Top + 按钮行 Top/Left，避免 TableLayoutPanel Percent+AutoSize
 		// 在 GroupBox 嵌套时被压缩导致按钮栏看不见的问题。
-		_progressTotal = new ProgressBar
+		// v4.17 修订六（C 档·P3-5/P3-8）：自绘扁平进度条。
+		// 总进度 = 主色、阶段进度 = 浅主色 —— 两条"一眼可分"（原两条系统绿块长得完全一样）；
+		// 右侧自带百分比数字（原实现没有任何数字，用户看不出具体进度）。
+		_progressTotal = new FlatProgressBar
 		{
 			Dock = DockStyle.Fill,
 			Minimum = 0,
 			Maximum = 100,
-			Margin = new Padding(0)
+			Margin = new Padding(0),
+			BarColor = UiTheme.Primary
 		};
-		_progressPhase = new ProgressBar
+		_progressPhase = new FlatProgressBar
 		{
 			Dock = DockStyle.Fill,
 			Minimum = 0,
 			Maximum = 100,
-			Margin = new Padding(0)
+			Margin = new Padding(0),
+			BarColor = UiTheme.PrimarySoft
 		};
 		var lblTotal = new Label
 		{
 			Text = "总进度",
 			Dock = DockStyle.Fill,
 			TextAlign = ContentAlignment.MiddleLeft,
-			Font = new Font("Microsoft YaHei UI", 8.5f),
-			ForeColor = Color.DimGray,
+			Font = UiTheme.FontSmall,
+			ForeColor = UiTheme.TextMuted,
 			Margin = new Padding(0)
 		};
 		var lblPhase = new Label
@@ -432,8 +420,8 @@ private void BuildUi()
 			Text = "阶段进度",
 			Dock = DockStyle.Fill,
 			TextAlign = ContentAlignment.MiddleLeft,
-			Font = new Font("Microsoft YaHei UI", 8.5f),
-			ForeColor = Color.DimGray,
+			Font = UiTheme.FontSmall,
+			ForeColor = UiTheme.TextMuted,
 			Margin = new Padding(0)
 		};
 		var pctBar = new TableLayoutPanel
@@ -455,23 +443,31 @@ private void BuildUi()
 		pctBar.Controls.Add(_progressTotal, 1, 0);
 		pctBar.Controls.Add(lblPhase, 0, 1);
 		pctBar.Controls.Add(_progressPhase, 1, 1);
-		// v4.17 修订四（P1-4 + B 档·主次区分）：五个按钮统一宽 120（原 105/113/130/150 参差），
-		// 主按钮"开始转换"加粗以示主次；"打开输出文件夹"原右边距为 0，与"设置"紧贴无间隙，一并修正。
-		_btnStart = new Button { Text = "开始转换", Width = 120, Height = 30, Margin = new Padding(0, 0, 8, 0), Font = new Font("Microsoft YaHei UI", 9f, FontStyle.Bold) };
+		// v4.17 修订四（P1-4 + B 档·主次区分）：五个按钮统一宽 120（原 105/113/130/150 参差）。
+		// v4.17 修订六（C 档·P3-1/P3-7 收口）：改"实心主色 + 白底描边"两级按钮层级——
+		//   主按钮（开始转换）= 实心主色底 + 白字 + 加粗；
+		//   次按钮            = 白底 + 统一描边 + 正文色，禁用时文字转灰（原禁用态几乎看不出）。
+		int btnW = 120, btnH = UiTheme.HeightButton, btnGap = UiTheme.Space2;
+		_btnStart = new Button { Text = "开始转换", Width = btnW, Height = btnH, Margin = new Padding(0, 0, btnGap, 0) };
+		ApplyPrimaryButton(_btnStart);
 		_btnStart.Click += delegate { Start(); };
-		_btnStop = new Button { Text = "停止", Width = 120, Height = 30, Enabled = false, Margin = new Padding(0, 0, 8, 0) };
+		_btnStop = new Button { Text = "停止", Width = btnW, Height = btnH, Enabled = false, Margin = new Padding(0, 0, btnGap, 0) };
+		ApplySecondaryButton(_btnStop);
 		_btnStop.Click += delegate
 		{
 			if (_converting) { StopRequested(); }
 			else { Continue(); }
 		};
-		_btnClear = new Button { Text = "清空清单", Width = 120, Height = 30, Margin = new Padding(0, 0, 8, 0) };
+		_btnClear = new Button { Text = "清空清单", Width = btnW, Height = btnH, Margin = new Padding(0, 0, btnGap, 0) };
+		ApplySecondaryButton(_btnClear);
 		_btnClear.Click += delegate { ClearList(); };
-		_btnOpenOut = new Button { Text = "打开输出文件夹", Width = 120, Height = 30, Enabled = false, Margin = new Padding(0, 0, 8, 0) };
+		_btnOpenOut = new Button { Text = "打开输出文件夹", Width = btnW, Height = btnH, Enabled = false, Margin = new Padding(0, 0, btnGap, 0) };
+		ApplySecondaryButton(_btnOpenOut);
 		_btnOpenOut.Click += delegate { OpenOutputFolder(); };
 
 		// v4.3：设置按钮（独立 Form 窗口，3 Tab：质量审查/块图框/打印）
-		_btnSettings = new Button { Text = "设置…", Width = 120, Height = 30, Margin = new Padding(0, 0, 8, 0) };
+		_btnSettings = new Button { Text = "设置…", Width = btnW, Height = btnH, Margin = new Padding(0, 0, btnGap, 0) };
+		ApplySecondaryButton(_btnSettings);
 		_btnSettings.Click += OpenSettings;
 		var buttonsRow = new TableLayoutPanel
 		{
@@ -495,7 +491,7 @@ private void BuildUi()
 		// "进度"组只承担展示语义（阶段条 + 双进度 + 阶段详情），操作按钮不再混在进度组内。
 		_grpProgress.Controls.Add(_lblPhaseDetail);
 		_grpProgress.Controls.Add(pctBar);
-		_grpProgress.Controls.Add(phaseBar);
+		_grpProgress.Controls.Add(_phaseBar);
 		Panel actionBar = new Panel
 		{
 			Dock = DockStyle.Top,
@@ -587,8 +583,8 @@ private void BuildUi()
 		{
 			Dock = DockStyle.Fill,
 			ReadOnly = true,
-			BackColor = Color.FromArgb(250, 250, 248),
-			Font = new Font("Consolas", 9f),
+			BackColor = UiTheme.LogBackground,
+			Font = UiTheme.FontMono,
 			BorderStyle = BorderStyle.None,
 			WordWrap = true
 		};
@@ -600,8 +596,8 @@ private void BuildUi()
 			Dock = DockStyle.Top,
 			Height = 22,
 			TextAlign = ContentAlignment.MiddleLeft,
-			Font = new Font("Microsoft YaHei UI", 8.5f),
-			ForeColor = Color.DimGray,
+			Font = UiTheme.FontSmall,
+			ForeColor = UiTheme.TextMuted,
 			Padding = new Padding(0, 2, 0, 0)
 		};
 		// v4.15：日志跟随开关（默认开启；上翻日志时自动暂停，回到底部自动恢复）
@@ -614,8 +610,8 @@ private void BuildUi()
 			Height = 22,
 			Margin = new Padding(0),
 			TextAlign = ContentAlignment.MiddleLeft,
-			Font = new Font("Microsoft YaHei UI", 8.5f),
-			ForeColor = Color.DimGray
+			Font = UiTheme.FontSmall,
+			ForeColor = UiTheme.TextMuted
 		};
 		Panel logHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
 		// v4.17 修订四（P0-1）：WinForms 的 Dock 布局按 z-order **逆序**处理（后 Add 的先占位）。
@@ -680,6 +676,50 @@ private void BuildUi()
 		RefreshListUi();
 	}
 
+	// ================= v4.17 修订六（C 档）：按钮层级 =================
+	/// <summary>主按钮：实心主色底 + 白字 + 加粗。禁用时整体降级为浅主色底 + 灰字，
+	/// 避免出现"实心蓝底 + 灰字"这种怪异组合（转换中"开始转换"会被禁用）。</summary>
+	private static void ApplyPrimaryButton(Button b)
+	{
+		b.UseVisualStyleBackColor = false;
+		b.FlatStyle = FlatStyle.Flat;
+		b.FlatAppearance.BorderSize = 0;
+		b.FlatAppearance.MouseOverBackColor = Color.FromArgb(20, 80, 139);
+		b.FlatAppearance.MouseDownBackColor = UiTheme.PrimaryDark;
+		b.Font = UiTheme.FontButtonPrimary;
+		b.ForeColor = Color.White;
+		b.BackColor = UiTheme.Primary;
+		b.EnabledChanged += delegate
+		{
+			if (b.Enabled)
+			{
+				b.BackColor = UiTheme.Primary;
+				b.ForeColor = Color.White;
+			}
+			else
+			{
+				b.BackColor = UiTheme.PrimaryLight;
+				b.ForeColor = UiTheme.TextDisabled;
+			}
+		};
+	}
+
+	/// <summary>次按钮：白底 + 统一描边 + 正文色；悬停浅主色底。
+	/// 禁用态虽然仍由系统置灰文字，但底色为白、描边可见，"禁用"这件事终于看得出来
+	/// （原实现里"打开输出文件夹"的禁用态几乎与可用态无异）。</summary>
+	private static void ApplySecondaryButton(Button b)
+	{
+		b.UseVisualStyleBackColor = false;
+		b.FlatStyle = FlatStyle.Flat;
+		b.FlatAppearance.BorderSize = 1;
+		b.FlatAppearance.BorderColor = UiTheme.Border;
+		b.FlatAppearance.MouseOverBackColor = UiTheme.PrimaryLight;
+		b.FlatAppearance.MouseDownBackColor = Color.FromArgb(206, 227, 247);
+		b.Font = UiTheme.FontBody;
+		b.ForeColor = UiTheme.Text;
+		b.BackColor = UiTheme.CardBackground;
+	}
+
 	/// <summary>v3.4：Dock 布局已接管尺寸；此方法仅在窗口缩放时按用户拖拽比例恢复 SplitContainer 分割位置。</summary>
 	private void UpdateListBounds()
 	{
@@ -712,7 +752,7 @@ private void BuildUi()
 			AllowUserToAddRows = false,
 			AllowUserToDeleteRows = false,
 			RowHeadersVisible = false,
-			BackgroundColor = Color.White,
+			BackgroundColor = UiTheme.CardBackground,
 			AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
 			// v3.9：三栏统一水平+垂直滚动，超长路径/原因可横拉查看（列头仍可拖宽）
 			ScrollBars = ScrollBars.Both
@@ -720,8 +760,8 @@ private void BuildUi()
 		// v4.6：失败栏整行浅红底（与"失败文件已在列表中标红"的提示文案一致）
 		if (isFail)
 		{
-			g.DefaultCellStyle.BackColor = Color.FromArgb(253, 236, 234);
-			g.DefaultCellStyle.SelectionBackColor = Color.FromArgb(252, 214, 210);
+			g.DefaultCellStyle.BackColor = UiTheme.DangerLight;
+			g.DefaultCellStyle.SelectionBackColor = UiTheme.DangerLightSelected;
 		}
 		if (isFail)
 		{
@@ -754,7 +794,7 @@ private void BuildUi()
 			if (g.Rows.Count > 0) return;
 			Rectangle r = new Rectangle(0, g.ColumnHeadersHeight, g.ClientSize.Width,
 				Math.Max(0, g.ClientSize.Height - g.ColumnHeadersHeight));
-			TextRenderer.DrawText(e.Graphics, "暂无文件", g.Font, r, Color.Silver,
+			TextRenderer.DrawText(e.Graphics, "暂无文件", g.Font, r, UiTheme.TextDisabled,
 				TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 		};
 		return g;
@@ -996,7 +1036,7 @@ private void BuildUi()
 		_txtInput.Text = inputEmpty
 			? "支持拖拽文件到窗口、Ctrl+V 粘贴（Ctrl+Z 撤销）"
 			: "已添加 " + _pendingFiles.Count + " 个 .dwg 文件";
-		_txtInput.ForeColor = inputEmpty ? Color.Gray : SystemColors.ControlText;
+		_txtInput.ForeColor = inputEmpty ? UiTheme.TextDisabled : UiTheme.Text;
 		// v3.9（双进度条）：总/阶段进度条归零（Maximum 固定 100，总进度按阶段权重驱动，不再按文件数）
 		if (_progressTotal != null) _progressTotal.Value = 0;
 		if (_progressPhase != null) _progressPhase.Value = 0;

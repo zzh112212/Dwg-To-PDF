@@ -640,6 +640,45 @@
      却把整行挤没了。UI 改动验收必须**"尺寸比对 + 截图"双证据**，且要**逐分区**核对，
      不能只核对本次动过的那几个控件。
 
+5.11 WinForms 自绘控件替换系统控件的三条纪律（2026-10-15，v4.17 修订六）
+- 背景：C 档界面优化要把系统经典绿块进度条换成扁平圆角条、把 5 个"白底方框 Label"
+  换成胶囊条。两处都是"自绘控件替换系统控件"，踩到并规避了几个坑。
+- 纪律①（兼容旧 API 才敢换）：新控件必须**同名同义**实现旧控件的关键属性。
+  FlatProgressBar 照搬 ProgressBar 的 Minimum/Maximum/Value 语义 →
+  主窗体里 13 处 `_progressTotal.Value = ...` 调用点**一行未改**。
+  反之若改了属性名/语义，替换会牵连一大片调用点，回归面瞬间失控。
+- 纪律②（自绘控件的三件套）：
+  · 构造函数先 `SetStyle(UserPaint | AllPaintingInWmPaint | OptimizedDoubleBuffer
+    | ResizeRedraw, true)`——UserPaint 才走 OnPaint，双缓冲消闪烁；
+  · **`BackColor = Color.Transparent` 必须先在 SetStyle 里开
+    `SupportsTransparentBackColor`**，否则赋值当场抛 ArgumentException；
+  · 背景自己画：`OnPaintBackground` 里沿父链上溯取第一个非 Transparent 的 BackColor
+    （封装成 `UiTheme.EffectiveBackground`）。这样控件放进"灰分组框"或"白卡片"
+    都自动贴合，不必为容器改代码（C2 卡片化时零成本复用）。
+- 纪律③（自绘尺寸一律走 DPI 换算）：`Control.DeviceDpi`（.NET 4.7+，public）
+  ÷ 96 得到缩放比，所有绘制尺寸/描边宽度都乘它。
+  **关键认知**：本工程已声明 dpiAwareness="PerMonitorV2"，且 WinForms 会对整个窗体
+  等比缩放——实测 ClientSize=760 在 125% 屏上实际是 1000×825（= 800×660 最小尺寸 ×1.25）。
+  也就是说**控件的 ClientSize 本身已是物理像素**，`UiTheme.Dpi()` 只用于"控件内部"的
+  绘制尺寸，两者相乘正好自洽（26 逻辑高的胶囊在 125% 下是 32.5 物理高，
+  内部 10 逻辑高的轨道是 12.5 物理高）。
+- 取证手段（无需真流程 / 无需改系统）：
+  · **组件预览工程**：新建一个只编译 `UiTheme + FlatProgressBar + PhaseChipBar`
+    三个源文件的 WinExe（`Compile Include` 指回主工程路径），把"只有跑真流程才会出现"
+    的视觉状态一次性摆出来截图。进度条的 0%/37%/100%、胶囊的待执行/进行中/已完成/
+    跳过/失败五态，全都不用 AutoCAD 就能验证。
+    状态注入用**反射**改私有 `_states` 数组，避免为"预览用"在生产控件上开测试专用 API。
+  · **96 DPI 布局怎么验**：把 exe 拷到一个**不含 .exe.config** 的目录再运行——
+    进程失去 dpiAwareness 声明即退化为 DPI 不感知，于是按 96 DPI 排版、由系统拉伸显示。
+    与 125% 原生截图比对：3.30% 像素差（仅拉伸模糊，无结构性位移/裁切）即通过。
+    比改注册表 AppCompatFlags 或改系统缩放干净得多，且零系统副作用。
+- 附带教训：**"某条断言失败"先分清是产品错还是断言错**。
+  `--dirp` 端到端报 `-2 目录非空 :: pdfs=0`，但递归计数 `-2` 目录里其实有 40 个 PDF——
+  断言用了不递归的 `Directory.GetFiles(dir,"*.pdf")`，而输出**保留输入的子目录结构**，
+  输入语料一旦含子目录该断言必然假失败。
+  判定"与本次改动无关"的最省力证据：**查 SelfTest.csproj 的编译白名单**——
+  本次改的 5 个文件（含 3 个新增）一个都不在名单里，SelfTest.exe 的编译源与基线完全一致，
+  因此该结果不可能由本次改动引起。这比"重跑一遍基线"快得多，也比"凭感觉说无关"可靠。
 
 ---
 ## 第6章 工程构建与测试环境

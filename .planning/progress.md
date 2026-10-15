@@ -174,3 +174,23 @@
 - **分支分工**：`main` = 修订四（稳定基线，**不含修订五**）；`ui-optimization` = 修订五 + 后续 C 档改造（测试用）
 - 未推送（push 需用户明确指令）；远端当前仅 `origin/main`
 - 后续：C 档若开工，按 C1 → C2 → C3 三批**在同一分支**上提交，每批可单独 revert
+
+## 2026-10-15 会话十 · C 档第一批 C1 落地（用户「审批通过」设计稿后开工）
+- 分支：`ui-optimization`（未推送）。**纯 UI、不升版本（v4.17 修订六）**
+- 批次微调（已告知用户）：设计稿 §10 的「进度条 + 阶段胶囊」由 C2 提到 **C1**（截图差异最大、不依赖卡片化）
+- 新增 3 文件（`源码工程/`，主工程 SDK 通配自动纳入；SelfTest 白名单不含 UI，无需登记）：
+  · `UiTheme.cs` —— 色板 / 间距 4·8·12·16·24 / 圆角 12·6 / 行高 / 字体 / `Dpi()` / `RoundedRect()` / `EffectiveBackground()`
+  · `FlatProgressBar.cs` —— 自绘扁平圆角进度条；**Minimum/Maximum/Value 与 ProgressBar 同名同义** → 既有 13 处 `.Value=` 零改动；
+    右侧 34px 百分比；总进度=主色 #185FA5、阶段进度=浅主色 #85B7EB
+  · `PhaseChipBar.cs` —— 阶段条由 5 个 Label 改自绘胶囊 + 连接线；五态；`Apply(下标, 跳过标记)` 语义与旧 `ResetPhaseBar` 完全一致
+- 改 `MainForm.cs`（字段类型 / 阶段条构造 / 双进度条构造 / 按钮层级 / 颜色与字体令牌）+
+  `MainForm.PhaseLog.cs`（`SetPhaseBarIdle` / `ResetPhaseBar` 只做状态翻译）
+- 验证链：编译 **0 警告 0 错误** → SelfTest **108/108 PASS**（exit 0）→ exe 发布 md5 一致（96fc4328…）、
+  版本串 v4.17 在 / v4.18 不在 → **控件树逐行 diff：只差阶段条 5 个 Label 消失，其余完全一致（零副作用）** →
+  125% 原生截图逐分区复验达标 → 96 DPI 路径（拷到无 .exe.config 目录运行）像素差 3.30%＝纯拉伸模糊 →
+  `--dirp` 40 张两轮各 40/40、0 失败、`-2` 正确、无 `-3`
+- 新增取证资产（`_测试输出/UI评审/`，不入 git）：`_c1预览/`（组件预览工程，反射注入状态，无需 AutoCAD）、
+  `c1_main.png` + zoom1~3、`c1_states.png`、`c1_states_96dpi.png`、`c1_controls.txt`、`c1_btn_enabled/disabled.png`
+- **新发现（非本次引入）**：`--dirp` 的「-2 目录非空」断言不递归 → 输入含子目录必然假失败（详见 task_plan E19）
+- 文档同步：手册 **5.11** / 说明 **第十七节** / 运行说明 **第十八节** / 版本变更记录（修订六行 + D7 + 事件）
+- 经验库：**本批暂未写正式条目**（dev-lessons 规则：先验收后记录）→ 已弹窗待验收

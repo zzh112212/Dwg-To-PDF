@@ -9,6 +9,8 @@ namespace DwgToPdf.Batch;
 // v4.6：从 MainForm.cs 拆分出阶段条与日志面板辅助方法（纯移动，不改逻辑）：
 // IndexOfPhase / UpdatePhaseProgress / UpdateTotalProgress / SetPhaseBarIdle
 // / AdvancePhase / ResetPhaseBar / SetPhaseBarDone / AppendLog
+// v4.17 修订六（C 档）：阶段条由 Label[] 改为自绘 PhaseChipBar，SetPhaseBarIdle / ResetPhaseBar
+//   只做"状态翻译"，具体配色下沉到 PhaseChipBar.Apply（视觉改动，行为不变）。
 // v4.17：OpenLogFolder 已删除（输出文件夹不再写日志文件，无 logs\ 目录可打开）
 internal sealed partial class MainForm
 {
@@ -43,7 +45,8 @@ internal sealed partial class MainForm
 	}
 
 	// ================= v3.9：阶段条辅助 =================
-	/// <summary>初始/空闲：阶段条全灰。</summary>
+	/// <summary>初始/空闲：阶段条全部回到"待执行"态。
+	/// v4.17 修订六（C 档）：着色下沉到 PhaseChipBar.Apply，本方法不再直接操作控件颜色。</summary>
 	private void SetPhaseBarIdle()
 	{
 		_currentPhase = RunPhase.Prepare;
@@ -51,19 +54,14 @@ internal sealed partial class MainForm
 		Array.Clear(_phaseDonePct, 0, _phaseDonePct.Length);
 		if (_progressTotal != null) _progressTotal.Value = 0;
 		if (_progressPhase != null) _progressPhase.Value = 0;
-		if (_phaseChips == null) return;
-		for (int i = 0; i < _phaseChips.Length; i++)
-		{
-			_phaseChips[i].BackColor = SystemColors.Control;
-			_phaseChips[i].ForeColor = Color.DimGray;
-		}
+		if (_phaseBar != null) _phaseBar.Apply(-1, null);
 	}
 
 	/// <summary>v3.9：阶段推进（只前进；skipped 置灰当前阶段并继续，不打断流程顺序）。</summary>
 	private void AdvancePhase(RunPhase phase, bool skipped)
 	{
 		_currentPhase = phase;
-		if (skipped && _phaseChips != null)
+		if (skipped && _phaseBar != null)
 		{
 			for (int i = 0; i < PhaseOrder.Length; i++)
 				if (PhaseOrder[i] == phase) _phaseSkippedFlags[i] = true;
@@ -80,45 +78,15 @@ internal sealed partial class MainForm
 		ResetPhaseBar();
 	}
 
-	/// <summary>按 _currentPhase 重着色：之前=完成（蓝底），当前=进行中（绿底），之后=未开始（灰）；跳过阶段灰底+"（跳过）"。</summary>
+	/// <summary>按 _currentPhase 重着色：之前=已完成，当前=进行中（跳过则转警告色），之后=待执行。
+	/// v4.17 修订六（C 档）：着色逻辑整体下沉到 PhaseChipBar.Apply——本方法只负责把
+	/// <c>_currentPhase</c> 翻译成"当前阶段下标"（RunPhase.Done 等非阶段枚举值 → 全部落定为已完成）。</summary>
 	private void ResetPhaseBar()
 	{
-		if (_phaseChips == null) return;
-		bool reached = false;
-		for (int i = 0; i < PhaseOrder.Length; i++)
-		{
-			Label chip = _phaseChips[i];
-			if (PhaseOrder[i] == _currentPhase)
-			{
-				reached = true;
-				if (_phaseSkippedFlags[i])
-				{
-					chip.BackColor = SystemColors.Control;
-					chip.ForeColor = Color.DimGray;
-					chip.Text = PhaseNames[i] + "（跳过）";
-				}
-				else
-				{
-					// v4.17 修订四（B 档·语义正名）：进行中改为蓝色系（原绿色系与"已完成"反直觉）
-					chip.BackColor = Color.FromArgb(221, 235, 247);
-					chip.ForeColor = Color.FromArgb(31, 78, 121);
-					chip.Text = PhaseNames[i];
-				}
-			}
-			else if (!reached)
-			{
-				// v4.17 修订四（B 档·语义正名）：已完成改为绿色系（蓝=进行中、绿=已完成，符合直觉）
-				chip.BackColor = Color.FromArgb(223, 240, 216);
-				chip.ForeColor = Color.FromArgb(46, 104, 57);
-				chip.Text = PhaseNames[i];
-			}
-			else
-			{
-				chip.BackColor = SystemColors.Control;
-				chip.ForeColor = Color.DimGray;
-				chip.Text = PhaseNames[i];
-			}
-		}
+		if (_phaseBar == null) return;
+		int index = IndexOfPhase(_currentPhase);
+		if (index < 0) index = PhaseOrder.Length;   // Done 等非阶段值：全部落定为已完成
+		_phaseBar.Apply(index, _phaseSkippedFlags);
 	}
 
 	/// <summary>转换结束/停止：阶段条全部落定为完成色。</summary>
