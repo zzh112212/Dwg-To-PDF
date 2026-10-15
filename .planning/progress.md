@@ -58,3 +58,22 @@
   .NET 版本串在 exe 里是 UTF-16LE（ASCII grep 查不到）
 - 交接：task_plan.md 重写为当前真实状态；handoff.md 整文件重写（10-07 PISCES 协作期内容已归档，
   结论以手册第 20~31 章为准）
+
+## 2026-10-15 会话三（git 提交 + 推送）
+- 仓库实况：Dwg-To-PDF/ 是 10-14 从个人 GitHub 克隆（HEAD 原为 8f6c7f2）；本机 git 身份已配置
+  且与历史作者一致（zzh112212 <2959338582@qq.com>）
+- 用户确认提交范围：包含 v4.15 删除，一个提交涵盖全部
+- 新提交 8974e8f（138 文件，+5989/-5440）：v4.17 全量 82 文件入库（48 个文件被 git 识别为
+  v4.15→v4.17 重命名、50 个纯删）+ .planning 四件套 + 手册；另记录 1 个删除：
+  .planning/trae_report.md 系用户 13:32:15 手动删除，提交如实记录，可用
+  `git checkout HEAD~1 -- .planning/trae_report.md` 恢复（27609B 已验活）
+- 推送成功：8f6c7f2..8974e8f fast-forward，main 与 origin/main 同步；
+  **公司电脑 HTTPS 直通**（个人机"HTTPS 被 Reset 走 SSH"的结论不适用于公司网络）
+
+## 2026-10-15 会话四（验收通过 + 经验文件落盘 + 交接刷新）
+- 用户确认 v4.17 修订三实测验收「通过」
+- 按 dev-lessons 流程创建 `experiences/lessons.md`（项目首个经验文件：此前从未存在、git 历史也无记录，
+  位置在工作区根 = 仓库 Dwg-To-PDF/ 之外，故不随仓库提交）：11 条正式条目
+  （GEN-WIN×3 / GEN-TEST×2 / GEN-GIT×2 / PRJ×4），lessons.py check 通过、toc 目录重建
+- .planning 四件套刷新（handoff 重写、task_plan/progress/findings 更新）并提交
+- 下一节点：等待用户提下一版本优化计划（需求明确前不动手）

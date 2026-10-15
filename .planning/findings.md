@@ -84,3 +84,15 @@
   **不含 WinForms 的 MainForm.cs / Program.cs** → 要回归的规则必须放在白名单文件里（如 ItemStatus.cs），
   放 MainForm 会 CS0234 编译不到。
 - **F14 工程文件改写规范**：Windows 上 .cs/.txt 改写必须保留原 **CRLF + BOM**（防编码破坏）。
+
+## F15 Git 仓库实况（2026-10-15 实测，纠正 10-07 旧结论）
+
+- **仓库位置**：`.git` 在 `Dwg-To-PDF/`（10-14 从个人 GitHub `zzh112212/Dwg-To-PDF` 克隆），
+  不是工作区根——工作区根的 `_测试输出/`、`测试文件夹输入/`、`.workbuddy-ai/` 在仓库之外。
+- **公司电脑 HTTPS 可直推 GitHub**：`git push origin main` 成功（8f6c7f2..8974e8f）。
+  10-07"个人机 HTTPS 被 Reset、须走 SSH"的结论**仅限个人机网络**，不适用于公司网络。
+  凭证来自克隆时系统托管（credential.helper=helper-selector），全程无交互。
+- **大批量变更的提交构成**：v4.17 首入库时 git 自动把 48 个 v4.15 文件识别为"搬入 v4.17 的
+  重命名"（相似度 68%~100%），仅 50 个纯删 ⇒ 版本演进脉络以 rename 形式保留，勿手工拆成删+增。
+- **提交前必查**：`git add -n` 预演文件数与类型（防 bin/obj/PDF/日志混入）；
+  历史惯例 = 发布目录跟踪 exe+config+lsp+json+运行说明.txt（v4.15/v4.16 均如此）。
