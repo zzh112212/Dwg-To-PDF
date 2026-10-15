@@ -67,3 +67,20 @@
 - 仓库根 = 工作区根；`origin` = https://github.com/zzh112212/Dwg-To-PDF.git（HTTPS 不通，待改 SSH）
 - 提交：`c711ec3` 初始化 → `b4a2aec` .gitignore 修正 → `f2e6537` 线宽实测 → `3a8b16e` HQ停用+OLE根因 → `6575031` 文档
 - 用户 PATH 已加 `Git\cmd`；SSH 密钥 `~/.ssh/id_ed25519_github_dwg`（ed25519，空口令）待贴公钥
+
+## F10~F14（2026-10-15 新增；详版证据见手册第31/32章，勿在此重复推导）
+
+- **F10 UCS 根因**：`entget` 图框是 **WCS** 坐标；`-EXPORT` Window 应答与 COM `SetWindowToPlot`
+  按**当前 UCS** 解释 → 非世界 UCS 图纸窗口整体平移。判别：`WORLDUCS`（只读，1=世界）、`UCSORG`。
+  修复 = 出图前复位 UCS；**先探测再复位**对世界 UCS 图纸零开销（2.29s vs 2.29s）。
+- **F11 Windows 文件名半角冒号非法**：直接过滤会把 `09:08:07` 滤成 `090807`（分隔符全丢）
+  → 先 `Replace(':', '：')`（全角 U+FF1A）再过滤其余非法字符。
+- **F12 三个工程机制**（本轮全部实测踩中）：
+  ① .NET 常量串在 exe 里是 **UTF-16LE**，ASCII grep 查不到 → 用 `s.encode('utf-16-le') in bytes` 验证版本号；
+  ② SelfTest 控制台输出是 **GBK**，管道抓取后须按 GBK 解码否则乱码；
+  ③ **引擎新鲜度守卫**：SelfTest 每次运行先比对自身 mtime ≥ 主工程 exe mtime，否则 FAIL（防拿旧引擎跑出假绿）
+  → 主工程重建后必须重建 SelfTest 再跑断言。
+- **F13 自测编译白名单**：`SelfTest.csproj` 用 `EnableDefaultCompileItems=false` + 显式 Compile Include，
+  **不含 WinForms 的 MainForm.cs / Program.cs** → 要回归的规则必须放在白名单文件里（如 ItemStatus.cs），
+  放 MainForm 会 CS0234 编译不到。
+- **F14 工程文件改写规范**：Windows 上 .cs/.txt 改写必须保留原 **CRLF + BOM**（防编码破坏）。

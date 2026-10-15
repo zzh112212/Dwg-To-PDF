@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <AssemblyName>DwgToPdf</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>True</UseWindowsForms>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Version>4.17.0.0</Version>
+    <FileVersion>4.17.0.0</FileVersion>
+    <AssemblyVersion>4.17.0.0</AssemblyVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="extframe.lsp" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="extframe_company.lsp" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="公司图框标准库.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

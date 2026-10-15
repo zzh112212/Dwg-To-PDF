@@ -1,5 +1,0 @@
-START
-layer=0  lw370=25  color62=7
-layer count = 1
-lw370: -1=ByLayer -2=ByBlock -3=LWDEFAULT(follows display) else absolute 1/100mm
-END

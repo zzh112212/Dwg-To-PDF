@@ -1,0 +1,26 @@
+# comparison corpus -- 8 problem PISCES + 12 controls
+# --- problem group (8) ---
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7633639-AC_LB001APIA3_主驾按摩腰托总成_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7633640-AC_LB003APIA3_主驾4W腰托总成_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7643421-AC_LB002APIA3_主驾泵阀总成_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7643423-AC_LB004APIA3_主驾4W腰托_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7807743-AC_LD001APIA3_副驾按摩腰托总成_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7807753-AC_LD003APIA3_副驾4W腰托总成_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7807757-AC_LD002APIA3_副驾泵阀总成_临时图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\打印问题文件\PISCES_7807758-AC_LD004APIA3_副驾4W腰托_临时图纸.dwg
+# --- control: H56E (only 2 exist) ---
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\模板（H56E）\H56E_LD200YH5A0_靠背气泵总成RH.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\模板（H56E）\H56E_LB200YH5A0_靠背气泵总成LH.dwg
+# --- control: 557单品 (3) ---
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\557单品\557单品图纸\气袋单品\主副驾气袋-左\557 27MY_MB110YM7A0_前排三连TPU膜-左.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\557单品\557单品图纸\气袋单品\二排靠背气袋-左\557 27MY_MF110YM7A0_二排靠背三连TPU膜-左.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\557单品\总成图纸\图纸\前排腰托-B\557 MY27_Y1828793-DR_主驾腰托气袋及阀体总成-260828.dwg
+# --- control: H47 (3) ---
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H47后排通风正式图纸-20260312\H47后排通风正式图纸-20260312\H47-Y1560841-VF001YH4A0-靠背通风总成-正式图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H47后排通风正式图纸-20260312\H47后排通风正式图纸-20260312\H47-VF230YH4A0-后排靠背3D网格-正式图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H47后排通风正式图纸-20260312\H47后排通风正式图纸-20260312\H47_RE100B04A0_座垫风扇单品图纸-正式图纸.dwg
+# --- control: H77 (4) ---
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H77项目正式图纸 - 20250521\H77_Y1131101_VB001YH7A0_前排靠背通风总成_正式图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H77项目正式图纸 - 20250521\H77_VF230YH7A0_中排靠背3D网格_正式图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H77项目正式图纸 - 20250521\H77_RC100C01A0_靠背风扇单品图纸_正式图纸.dwg
+E:\TRAE工作文件夹\DWG TO PDF\测试文件输入\H77项目正式图纸 - 20250521\H77_VA210YH7A0_前排标配坐垫通风防风布_正式图纸.dwg

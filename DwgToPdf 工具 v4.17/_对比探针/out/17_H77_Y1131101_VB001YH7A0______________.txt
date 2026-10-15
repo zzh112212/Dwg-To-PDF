@@ -1,0 +1,136 @@
+===== COMPARE DUMP =====
+DWGPREFIX = C:\Temp\dwgtopdf_probe\
+SYSVAR ACADVER = 25.1
+SYSVAR LWDEFAULT = 25
+SYSVAR LWDISPLAY = 0
+SYSVAR CECOLOR = BYBLOCK
+SYSVAR CELWEIGHT = -1
+SYSVAR PSTYLEMODE = 1
+SYSVAR INSUNITS = 4
+SYSVAR MEASUREMENT = 1
+SYSVAR CTAB = Model / TILEMODE = 1
+LAYOUT Model
+   g2 = AutoCAD PDF (High Quality Print).pc3
+   g4 = ISO_full_bleed_4A0_(1682.00_x_2378.00_MM)
+   g7 = monochrome.ctb
+   g70 = 3588
+   g72 = 1
+   g73 = 1
+   g74 = 4
+   g76 = 1
+   g146 = 0
+   g40 = 0
+   g41 = 0
+   g42 = 0
+   g43 = 0
+   g44 = 1682
+   g45 = 2378
+   g46 = 41.555848
+   g47 = 5
+   g48 = 17003.284525
+   g140 = 19363.461265
+   g147 = 0.491452
+   >> g70bits 3588 [+4 +512 +1024 +2048 ]
+LAYOUT 布局1
+   g2 = none_device
+   g4 = ISO_A4_(210.00_x_297.00_MM)
+   g7 = acad.ctb
+   g70 = 688
+   g72 = 1
+   g73 = 1
+   g74 = 5
+   g76 = 0
+   g146 = 0
+   g40 = 7.5
+   g41 = 20
+   g42 = 7.5
+   g43 = 20
+   g44 = 210
+   g45 = 297
+   g46 = 0
+   g47 = 0
+   g48 = 0
+   g140 = 0
+   g147 = 1
+   >> g70bits 688 [+16 +32 +128 +512 ]
+LAYOUT 布局2
+   g2 = none_device
+   g4 = ISO_A4_(210.00_x_297.00_MM)
+   g7 = acad.ctb
+   g70 = 688
+   g72 = 1
+   g73 = 1
+   g74 = 5
+   g76 = 0
+   g146 = 0
+   g40 = 7.5
+   g41 = 20
+   g42 = 7.5
+   g43 = 20
+   g44 = 210
+   g45 = 297
+   g46 = 0
+   g47 = 0
+   g48 = 0
+   g140 = 0
+   g147 = 1
+   >> g70bits 688 [+16 +32 +128 +512 ]
+----- LAYER TABLE -----
+LAYER 0 | c62=7 | g370=nil | g70=0
+LAYER 中心线层cen | c62=1 | g370=nil | g70=0
+LAYER 标注层dim | c62=3 | g370=nil | g70=0
+LAYER 虚线层hid | c62=8 | g370=nil | g70=0
+LAYER 水路层cool | c62=4 | g370=nil | g70=0
+LAYER 假想层div | c62=6 | g370=nil | g70=0
+LAYER 文字层text | c62=2 | g370=nil | g70=0
+LAYER Defpoints | c62=7 | g370=nil | g70=0
+LAYER layer 1 | c62=7 | g370=nil | g70=0
+LAYER tukuang | c62=7 | g370=nil | g70=0
+LAYER 07 | c62=7 | g370=nil | g70=0
+LAYER 標註線 | c62=3 | g370=nil | g70=0
+LAYER 受控文件 | c62=7 | g370=nil | g70=0
+----- ENTITY PASS (whole database) -----
+SSGET_X TOTAL = 6563
+----- TYPE HISTOGRAM -----
+TYPE VIEWPORT x4
+TYPE LINE x3452
+TYPE ARC x1564
+TYPE POLYLINE x402
+TYPE ELLIPSE x508
+TYPE MULTILEADER x12
+TYPE CIRCLE x74
+TYPE LWPOLYLINE x356
+TYPE SPLINE x5
+TYPE ACAD_TABLE x11
+TYPE MTEXT x45
+TYPE DIMENSION x59
+TYPE OLE2FRAME x5
+TYPE INSERT x1
+TYPE HATCH x13
+TYPE TEXT x52
+----- ENTITY LINE WEIGHT g370 (MODEL space) -----
+MODEL with370 = 6150 / without370 = 409
+PAPER with370 = 0 / without370 = 4
+G370M 13 x958
+G370M 35 x2515
+G370M NO_370 x409
+G370M 0 x2672
+G370M 140 x5
+----- CURVE-TYPE g370 (MODEL space) -----
+G370CURV 13 x958
+G370CURV 35 x2515
+G370CURV NO_370 x246
+G370CURV 0 x2637
+G370CURV 140 x5
+----- ENTITY TRANSPARENCY g440 (MODEL space) -----
+MODEL entities with440 = 0
+G440M <none>
+----- ENTITY COLOR g62 (MODEL+ALL) -----
+G62 <none> x359
+G62 7 x6045
+G62 6 x2
+G62 0 x153
+G62 2 x2
+G62 252 x2
+----- ENTITY LAYER g8 (MODEL+ALL) -----
+FATAL: 参数类型错误: fixnump: ((2 . "0") (70 . 0) (62 . 7) (6 . "Continuous"))

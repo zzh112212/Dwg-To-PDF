@@ -1,0 +1,127 @@
+===== COMPARE DUMP =====
+DWGPREFIX = C:\Temp\dwgtopdf_probe\
+SYSVAR ACADVER = 25.1
+SYSVAR LWDEFAULT = 25
+SYSVAR LWDISPLAY = 0
+SYSVAR CECOLOR = BYLAYER
+SYSVAR CELWEIGHT = -1
+SYSVAR PSTYLEMODE = 1
+SYSVAR INSUNITS = 4
+SYSVAR MEASUREMENT = 1
+SYSVAR CTAB = Model / TILEMODE = 1
+LAYOUT Model
+   g2 = DWG To PDF.pc3
+   g4 = ISO_full_bleed_4A0_(1682.00_x_2378.00_MM)
+   g7 = monochrome.ctb
+   g70 = 11780
+   g72 = 1
+   g73 = 1
+   g74 = 4
+   g76 = 0
+   g146 = 0
+   g40 = 0
+   g41 = 0
+   g42 = 0
+   g43 = 0
+   g44 = 1682
+   g45 = 2378
+   g46 = 41.471874
+   g47 = 5
+   g48 = 3242.862455
+   g140 = 5487.828984
+   g147 = 0.040289
+   >> g70bits 11780 [+4 +512 +1024 +2048 +8192 ]
+LAYOUT 布局1
+   g2 = C:\Documents and Settings\basas\Application Data\Autodesk\AutoCAD 2005\R16.1\enu\plotters\Default Windows System Printer.pc3
+   g4 = 
+   g7 = monochrome.ctb
+   g70 = 688
+   g72 = 0
+   g73 = 0
+   g74 = 5
+   g76 = 0
+   g146 = 0
+   g40 = 0
+   g41 = 0
+   g42 = 0
+   g43 = 0
+   g44 = 0
+   g45 = 0
+   g46 = 0
+   g47 = 0
+   g48 = 0
+   g140 = 0
+   g147 = 1
+   >> g70bits 688 [+16 +32 +128 +512 ]
+LAYOUT 布局2
+   g2 = C:\Documents and Settings\basas\Application Data\Autodesk\AutoCAD 2005\R16.1\enu\plotters\Default Windows System Printer.pc3
+   g4 = 
+   g7 = monochrome.ctb
+   g70 = 688
+   g72 = 0
+   g73 = 0
+   g74 = 5
+   g76 = 0
+   g146 = 0
+   g40 = 0
+   g41 = 0
+   g42 = 0
+   g43 = 0
+   g44 = 0
+   g45 = 0
+   g46 = 0
+   g47 = 0
+   g48 = 0
+   g140 = 0
+   g147 = 1
+   >> g70bits 688 [+16 +32 +128 +512 ]
+----- LAYER TABLE -----
+LAYER 0 | c62=7 | g370=nil | g70=0
+LAYER Defpoints | c62=7 | g370=nil | g70=0
+LAYER 细实线 | c62=1 | g370=nil | g70=0
+LAYER layer 1 | c62=7 | g370=nil | g70=0
+----- ENTITY PASS (whole database) -----
+SSGET_X TOTAL = 2335
+----- TYPE HISTOGRAM -----
+TYPE OLE2FRAME x4
+TYPE MTEXT x44
+TYPE LWPOLYLINE x81
+TYPE LINE x1772
+TYPE ARC x285
+TYPE CIRCLE x55
+TYPE HATCH x7
+TYPE DIMENSION x50
+TYPE ACAD_TABLE x9
+TYPE POLYLINE x17
+TYPE MULTILEADER x10
+TYPE INSERT x1
+----- ENTITY LINE WEIGHT g370 (MODEL space) -----
+MODEL with370 = 741 / without370 = 1594
+PAPER with370 = 0 / without370 = 0
+G370M 9 x136
+G370M NO_370 x1594
+G370M 35 x433
+G370M 0 x104
+G370M 140 x4
+G370M 15 x9
+G370M 13 x55
+----- CURVE-TYPE g370 (MODEL space) -----
+G370CURV 9 x97
+G370CURV NO_370 x1523
+G370CURV 35 x433
+G370CURV 0 x89
+G370CURV 140 x4
+G370CURV 15 x9
+G370CURV 13 x55
+----- ENTITY TRANSPARENCY g440 (MODEL space) -----
+MODEL entities with440 = 0
+G440M <none>
+----- ENTITY COLOR g62 (MODEL+ALL) -----
+G62 <none> x194
+G62 7 x2017
+G62 0 x118
+G62 2 x2
+G62 1 x2
+G62 6 x2
+----- ENTITY LAYER g8 (MODEL+ALL) -----
+FATAL: 参数类型错误: fixnump: ((2 . "0") (70 . 0) (62 . 7) (6 . "Continuous"))

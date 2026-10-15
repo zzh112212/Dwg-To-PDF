@@ -23,3 +23,38 @@
 - **用户指出：这一步必须看屏幕，否则会一直卡住，需要 ESC 退出**；我确认自己看不到屏幕
 - 用户建议改用 TRAE 的电脑操作技能；我改用本会话可用的 Computer Use 能力
 - 按用户要求启用 context-continuity，把状态落盘到 `.planning\`
+
+## 2026-10-14 会话（v4.17 修订一：交付版功能改进）
+- 通用版识别提速：识别脚本改回 `(load)` 外部加载，单张识别约快 10%，整批阶段1 47.0s→31.9s（-32%）；
+  识别结果与前一版逐张一致（0 张纸型差异）
+- 质量审查由 4 维加严为 5 维：补"内容流为空 / 页尺寸短边不符 / PDF 被截断"三类漏判
+- 输出目录自动清理：转换结束后删 frame_cache.json 与 *.log；日志改为仅实时面板显示（用户要求不落盘）
+- 界面精简：设置页移除停用项、文案改短；主窗体移除"打开日志文件夹"按钮
+- 已发布 exe 到 `发布程序 v4.17/`；版本号维持 4.17.0.0（未升 4.18：行为兼容修复不升版）
+- 文档同步：说明.txt 第十三节、源码说明.txt、运行说明.txt、手册第30章
+
+## 2026-10-15 会话一（v4.17 修订二：UCS 世界坐标系修复）
+- 根因（控制变量实验确凿）：问题图纸 557 27MY-Y17369xx 三张保存了非世界 UCS；
+  extframe.lsp 返回 WCS 图框，而 -EXPORT 窗口应答 / COM SetWindowToPlot 按当前 UCS 解释
+  → 窗口整体平移 229.02,215.70 → 左裁 ~18%、底裁 ~25%、顶部留 318mm 空白
+- 修复三处注入点：PlotSession.BuildScript（`_.UCS _World`）、CadConverter.TryResetUcsToWorld、
+  PageSetupPreprocessor（精确模式设窗口前）
+- 端到端 3/3 成功，墨迹 821.6×1161.6、边距 L9.7/R9.7/T13.6/B13.6；全量回归 113/115（2 张 H77 既有问题）
+- 顺手修 MainForm 两个 tooltip 文案错误（出图配色实际只有黑白/彩色两项）
+- 文档同步：手册第31章、说明.txt、源码说明、运行说明
+
+## 2026-10-15 会话二（v4.17 修订三：三项需求 + 全角冒号 + 版本回退）
+- 需求①跳过已成功图纸：规则落 `ItemStatus.cs` 的 RunSelection.FilterTodoFiles；MainForm.Start 委托
+- 需求②时间戳 PDF 文件夹：默认模板 PDF-HH:mm:ss；ResolvePdfSubFolder 纯解析同名追加 -2/-3；
+  「打开输出文件夹」改开最新时间戳文件夹；顺修 LatestPdfSubFolder 按 token 顺序截前缀的既有缺陷
+- 需求③UCS 条件复位：WORLDUCS==1 直接跳过；实测零开销（2.29s vs 2.29s）
+- 用户追加要求：时间分隔符圆点改冒号 → 半角冒号非法 → 映射全角「：」（PDF-09：08：07）
+- 自测扩充：TestPdfFolderTemplate 16 条 + TestFilterTodoFiles 7 条 + --dirp/--dirs E2E；
+  FindPdfFolder 替换全部写死 "PDF文件" 的断言；默认断言集 108/108 PASS
+- **版本回退**：我顺手把 Version 升成 v4.18，用户否决（"本轮的改动不升版本，还是v4.17"）
+  → Program.Version 改回 v4.17；93 处 v4.18 标注全部改为「v4.17 修订三」；手册"新增 24 条"计数纠错为 23 条
+  → 重建主工程 + 自测工程（0 警告 0 错误），108/108 PASS，13:15 重新发布 exe（UTF-16 检索确认 v4.17 无 v4.18）
+- 触发的两个机制认知：主工程重建后 SelfTest 变旧会触发引擎新鲜度守卫 FAIL（必须先重建自测再跑）；
+  .NET 版本串在 exe 里是 UTF-16LE（ASCII grep 查不到）
+- 交接：task_plan.md 重写为当前真实状态；handoff.md 整文件重写（10-07 PISCES 协作期内容已归档，
+  结论以手册第 20~31 章为准）
