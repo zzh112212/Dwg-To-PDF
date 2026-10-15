@@ -240,19 +240,20 @@ private void BuildUi()
 		};
 		// v4.17 修订四（P1-5）：原两行共用一个 6 列 AutoSize 栅格，列宽取两行最大值 →
 		// 行 1 的"配色："标签被行 2 的复选框撑开（与下拉框之间空出 100px），行 2 又因首列 Margin 整体右移 17px。
-		// 现拆成上下两个独立栅格，各按自身内容定列宽，两行左缘对齐。
-		var tblOptHost = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
-		tblOptHost.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-		tblOptHost.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-		tblOptHost.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-		var tblOptRow1 = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 6, RowCount = 1, Margin = new Padding(0) };
-		for (int i = 0; i < 6; i++) tblOptRow1.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOptRow1.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-		var tblOptRow2 = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, Margin = new Padding(0) };
-		for (int i = 0; i < 3; i++) tblOptRow2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-		tblOptRow2.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+		// v4.17 修订五（回归修复）：仍用单个 6 列栅格，但行 2 不再独占列 —— 改为"跨 6 列的单格 + 横向流式容器"，
+		// 既不参与列宽计算（100px 空档消失），又从栅格左缘起排（与行 1 左缘对齐）。
+		// 【踩坑·务必保留】曾把两行拆成两个嵌套 TableLayoutPanel，且子表 Dock=Fill 落在 AutoSize 行内，
+		// 实测子表被撑到 100 逻辑像素高，把行 2 顶出 92px 高的分组之外、整行不可见（详见手册 5.10）。
+		var tblOptions = new TableLayoutPanel
+		{
+			Dock = DockStyle.Fill,
+			ColumnCount = 6,
+			RowCount = 2,
+			Margin = new Padding(0)
+		};
+		for (int i = 0; i < 6; i++) tblOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+		tblOptions.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+		tblOptions.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 		ToolTip toolTip = new ToolTip();
 		_rbMarginOn = new RadioButton
 		{
@@ -295,12 +296,12 @@ private void BuildUi()
 		_cmbMode.SelectedIndex = 1;
 		toolTip.SetToolTip(_cmbMode, "通用版：逐层识别图框，通用性强。\r\n公司版：按公司模板库快速匹配，速度更快。");
 
-		tblOptRow1.Controls.Add(_rbMarginOn, 0, 0);
-		tblOptRow1.Controls.Add(_rbMarginOff, 1, 0);
-		tblOptRow1.Controls.Add(_lblPrint, 2, 0);
-		tblOptRow1.Controls.Add(_cmbPrint, 3, 0);
-		tblOptRow1.Controls.Add(_lblMode, 4, 0);
-		tblOptRow1.Controls.Add(_cmbMode, 5, 0);
+		tblOptions.Controls.Add(_rbMarginOn, 0, 0);
+		tblOptions.Controls.Add(_rbMarginOff, 1, 0);
+		tblOptions.Controls.Add(_lblPrint, 2, 0);
+		tblOptions.Controls.Add(_cmbPrint, 3, 0);
+		tblOptions.Controls.Add(_lblMode, 4, 0);
+		tblOptions.Controls.Add(_cmbMode, 5, 0);
 		// v4.1：第二行——显示线宽 + 质量核查两个选项。
 		// 并发参数沿用 v4.0 实测最优值（12/4/8），Concurrency.cs 硬编码内置、
 		// UI 不可调（曾计划并发设置数值框 + settings.json，已评估否决未落地）
@@ -308,35 +309,46 @@ private void BuildUi()
 		{
 			Text = "显示线宽",
 			AutoSize = true,
-			Margin = new Padding(0, 6, 14, 0)
+			Margin = new Padding(0, 6, 18, 0)
 		};
 		toolTip.SetToolTip(_chkLineWeight, "勾选后按图纸线宽显示；默认统一粗细。");
 
-		tblOptRow2.Controls.Add(_chkLineWeight, 0, 0);
 		_chkQualityCheck = new CheckBox
 		{
 			Text = "质量核查",
 			AutoSize = true,
-			Margin = new Padding(14, 6, 14, 0),
+			Margin = new Padding(0, 6, 18, 0),
 			Checked = true
 		};
 		toolTip.SetToolTip(_chkQualityCheck, "开启后自动检测 PDF 内容完整性；不达标判失败并回退重出。默认开启。");
-		tblOptRow2.Controls.Add(_chkQualityCheck, 1, 0);
 		_chkBlockFrame = new CheckBox
 		{
 			Text = "识别块图框",
 			AutoSize = true,
-			Margin = new Padding(14, 6, 14, 0),
+			Margin = new Padding(0, 6, 0, 0),
 			// v4.12 修订：默认由勾选改为不勾选（识别块图框会明显拖慢识别，实测 +45%）；
 			// 实际状态由 ApplyUiState 按 settings.json 恢复（本处仅为默认值）
 			Checked = false
 		};
 		toolTip.SetToolTip(_chkBlockFrame, "图框为块（INSERT）的图纸可启用。");
-		tblOptRow2.Controls.Add(_chkBlockFrame, 2, 0);
 
-		tblOptHost.Controls.Add(tblOptRow1, 0, 0);
-		tblOptHost.Controls.Add(tblOptRow2, 0, 1);
-		_grpOptions.Controls.Add(tblOptHost);
+		// v4.17 修订五：行 2 三个开关装进横向流式容器，整体跨 6 列放在第 2 行，
+		// 从而不参与列宽计算、且从栅格左缘起排（与行 1 左缘对齐）。
+		var optRow2 = new FlowLayoutPanel
+		{
+			FlowDirection = FlowDirection.LeftToRight,
+			WrapContents = false,
+			AutoSize = true,
+			AutoSizeMode = AutoSizeMode.GrowAndShrink,
+			Anchor = AnchorStyles.Left | AnchorStyles.Top,
+			Margin = new Padding(0)
+		};
+		optRow2.Controls.Add(_chkLineWeight);
+		optRow2.Controls.Add(_chkQualityCheck);
+		optRow2.Controls.Add(_chkBlockFrame);
+		tblOptions.Controls.Add(optRow2, 0, 1);
+		tblOptions.SetColumnSpan(optRow2, 6);
+		_grpOptions.Controls.Add(tblOptions);
 
 		// ---------- 3) 进度与操作（v3.9：+阶段总览条 + 当前阶段详情） ----------
 		_grpProgress = new GroupBox
