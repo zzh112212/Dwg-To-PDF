@@ -16,7 +16,8 @@ C 档 = 界面优化第二轮（设计稿 `_测试输出/UI评审/UI优化设计
   - `源码工程/` —— 主程序（net48 WinForms，AutoCAD 2021 accoreconsole + COM 后期绑定）
   - `自测试工程/` —— SelfTest，**直接编译源码工程的白名单 .cs**（`SelfTest.csproj` 显式 Compile Include，不含 MainForm.cs）
   - `发布程序 v4.17/` —— 交付目录：DwgToPdf.exe + .config + extframe*.lsp + 公司图框标准库.json + 运行说明.txt + 运行日志/
-- **Git 仓库实况**：`.git` 在 `Dwg-To-PDF/`（10-14 从个人 GitHub `zzh112212/Dwg-To-PDF` 克隆，非个人机原始库）。
+- **Git 仓库实况（10-16 合并后）**：main 已快进至 c1ed5fe（= ui-optimization），领先 origin/main 8 提交未推送。
+- **Git 仓库实况：`.git` 在 `Dwg-To-PDF/`（10-14 从个人 GitHub `zzh112212/Dwg-To-PDF` 克隆，非个人机原始库）。
   本机 git 身份已配置且与历史作者一致（`zzh112212 <2959338582@qq.com>`）。
   已提交并推送至 `f1c173a`（8974e8f → 3c6937c → ea50c40 → 76b9be4 → f1c173a，main 与 origin/main 同步）。**公司电脑 HTTPS 可直推 GitHub**（个人机须 SSH 的结论不适用于公司网络）；推送偶发失败（schannel 中断 / 代理 CONNECT 502 on github.com，同代理 api.github.com 仍通 200）属瞬时态，原样重试即通，勿急着改代理配置。
 - 权威文档：`Dwg-To-PDF/DwgToPdf完整经验手册.md`（第31章 UCS 根因、第32章 修订三）；版本沿革看 `说明.txt` 第十三/十四节。
@@ -59,6 +60,7 @@ C 档 = 界面优化第二轮（设计稿 `_测试输出/UI评审/UI优化设计
   断言 AcceptButton / Esc 真实按键 / detailInView + hscroll=0 / clamp 全过；
   主窗 + 设置窗（三分类）+ 展开详情截图复验无回归；
   exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
+- **已合并**：`ui-optimization` → `main` 快进合并至 c1ed5fe（diff 0、无冲突），main 领先 origin/main 8 提交，**未推送**；`ui-optimization` 保留作批次存档。
 - **下一步**：① 正式经验条目已写（GEN-WIN-011~014 + GEN-TEST-004，25 条）；②
   （C1/修订六·补/C3 三批的条目都挂在这一次；C1 历史教训两件：`LB_SETCURSEL` 不驱动
   WinForms ListBox、96 DPI 本机无法降级——.NET 4.7+ 默认 per-monitor）；

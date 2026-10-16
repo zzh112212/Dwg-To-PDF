@@ -92,8 +92,8 @@ exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
 - 用户待决事项（3 项）：① 是否 push 分支 `ui-optimization`；② 是否把 `experiences/lessons.md`
   上传 ima 知识库（现 20 条 / 约 267KB，需 IMA 凭证）；③ 是否保留 `_测试输出/UI评审/` 工具链。
 - 分支：**`ui-optimization`** —— 修订五 `b717d69`、`.planning` `012a4ec`、C1 `b8a3941`、
-  修订六·补（缓动）`1a4c5ea`、修订六·补（`--dirp` 断言）`3008bd7`、C2 `24ddf3c`、C3 独立 commit；
-  `main` 保持只到修订四（`4e9d2be`）。**未推送**。
+  修订六·补（缓动）`1a4c5ea`、修订六·补（`--dirp` 断言）`3008bd7`、C2 `24ddf3c`、C3 `c1ed5fe`；
+  **已快进合并**：`main` = `c1ed5fe`（与 ui-optimization 一致，领先 origin/main 8 提交，未推送）。
 - 验收提醒：C1 已被驳回过一次（进度条缓动）→ 已修；C3 含两处「数字陷阱」修复
   （列宽 244≤264、面板高度 clamp），验收时若窗口拖到最小尺寸，注意展开详情后面板自适应。
 
