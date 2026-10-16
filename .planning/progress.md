@@ -299,4 +299,6 @@
 - 用户 10-16 追加拍板留痕：C2 验收「通过」；C3 范围（界面分类不做）；`ui-optimization` 暂不推送。
 - **已提交**（C3 独立 commit，10 文件 +622/−64，**未 push**）。
 - 用户弹窗验收 **通过**；经验库新增 5 条正式条目（20 → 25：GEN-WIN-011/012/013/014 + GEN-TEST-004），`check`/`toc` 通过。
-- **合并**：`ui-optimization` → `main` 快进合并（c1ed5fe；ff、diff 0、无冲突）；main 领先 origin/main 8 提交，**未推送**；`ui-optimization` 保留作批次存档。
+- **合并**：`ui-optimization` → `main` 快进合并（c1ed5fe；ff、diff 0、无冲突）；`ui-optimization` 保留作批次存档。
+- **推送 main 未成（12:3x）**：代理对 github.com:443 CONNECT 502（约 10 次失败）；api/codeload 通、直连超时、无 SSH key。
+  **本地 main = 762b877 领先 origin 9 提交**，待网络恢复后 `git push origin main`。

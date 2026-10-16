@@ -107,6 +107,8 @@ D8  10-16：C3 范围最终口径 = §5.5 失败原因内联展开 + §5.6 键�
       已同步放大默认/最小尺寸为 900×760 / 840×730（手册 5.12 陷阱②）。
 09:3x  控件树 dump 体检（67 控件）：零尺寸 0 项、越界 0 项；125% 与 96 DPI 双路径截图复验，
       顶部所有卡片逐像素一致，Fill 区仅因窗口高度差 20px 不同，无裁切/重叠。
+12:3x  推送 main **未成功**：本地代理（127.0.0.1:62808，WorkBuddy 服务代理）对 github.com:443 CONNECT 连续 502 / schannel 中断，共约 10 次 + 间隔重试均失败；同期 api.github.com 200、codeload.github.com 301（代理活着、仅 github.com 被拒）；直连 github.com 超时（公司网络不出海）；ssh.github.com:443 亦被拒且本机无 SSH key（~/.ssh 不存在）→ SSH 备道不通。
+       **本地 main = 762b877 已就绪，领先 origin/main 9 提交未推送**；待代理放行/恢复后 `git push origin main` 一条命令即可。勿改用户代理配置（项目经验）。
 11:1x  用户弹窗验收 C3「通过」→ 经验库新增 5 条正式条目（20 → 25：GEN-WIN-011 新增列最小宽合计 / 012 固定高度条高于容器不收缩 / 013 SelfTest --no-incremental / 014 本机 .NET 4.7+ 无法降 96 DPI；GEN-TEST-004 私有窗体反射 harness），check/toc 通过。
 10:3x  C3 落地（收尾批）：失败原因内联展开（note 截断摘要 32 字 +「详情 ▸」链接列 +
        Dock=Bottom 只读面板 = 完整原因 + 日志尾部 20 行，不弹窗）、键盘可达性

@@ -60,7 +60,8 @@ C 档 = 界面优化第二轮（设计稿 `_测试输出/UI评审/UI优化设计
   断言 AcceptButton / Esc 真实按键 / detailInView + hscroll=0 / clamp 全过；
   主窗 + 设置窗（三分类）+ 展开详情截图复验无回归；
   exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
-- **已合并**：`ui-optimization` → `main` 快进合并至 c1ed5fe（diff 0、无冲突），main 领先 origin/main 8 提交，**未推送**；`ui-optimization` 保留作批次存档。
+- **已合并**：`ui-optimization` → `main` 快进合并至 c1ed5fe（diff 0、无冲突）；`ui-optimization` 保留作批次存档。
+- **推送未成（12:3x）**：代理 502 on github.com（api/codeload 通、直连超时、无 SSH key）；**本地 main=762b877 领先 origin 9 提交**，网络恢复后 `git push origin main`。
 - **下一步**：① 正式经验条目已写（GEN-WIN-011~014 + GEN-TEST-004，25 条）；②
   （C1/修订六·补/C3 三批的条目都挂在这一次；C1 历史教训两件：`LB_SETCURSEL` 不驱动
   WinForms ListBox、96 DPI 本机无法降级——.NET 4.7+ 默认 per-monitor）；
