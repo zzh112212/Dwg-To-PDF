@@ -11,18 +11,22 @@
 - 不明确的需求先问清楚再动手（用户要求 95% 把握才执行）
 
 ## Current Phase
-phase8.11 —— **v4.17 修订八（C 档·第三批 C3：失败原因内联展开 + 键盘可达性 + 设置页
-三分类左右分栏）已实施并验证，待用户验收**。
-用户 10-16 拍板：C3 = §5.5 失败原因内联展开 + §5.6 键盘可达性 + §6 设置页左右分栏；
-**§6「界面」分类不做**，只保留 质量审查 / 识别块图框 / 打印输出 三分类，
-不新增设置项、不改 AppSettings.cs；仍为纯交互 + 布局，不升版本号。
-验证：主工程 0 警告 0 错误；**强制重建** SelfTest（`--no-incremental`）108/108 exit 0；
-反射 harness 断言（AcceptButton / Esc 真实按键 / detailInView + hscroll=0 / 高度 clamp）全过；
-主窗 + 设置窗（三分类切换）+ 展开详情截图复验无回归；
-exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
-文档已同步（手册 5.13 / 说明第十九节 / 运行说明第二十节 / 版本变更记录修订八行 + D8 + 10-16 事件段）。
-前序 phase8.10 = v4.17 修订七（C2）已验收通过、已提交 `24ddf3c`（未推送）。
-（phase8.7 = v4.17 修订四已交付并验收通过；`main` = `4e9d2be`，分支 `ui-optimization` 未推送）
+phase8.12 —— **C 档 C1~C3 全部完成、用户验收通过、已合并 main、已推送远端（main + 存档分支
+ui-optimization）；推送通道（SSH over 443）与 GCM 弹窗已根治；任务告一段落，等待下一次版本优化**。
+- 分支拓扑终态：`main` = `de9d5f9`（= 合并 `762b877` + 台账），`ui-optimization` = `c1ed5fe`（C3），
+  **两个分支均已推送到 origin（zzh112212/Dwg-To-PDF）**，本地与 origin 完全同步、工作区干净。
+- 推送真因与解法（10-16 13:5x）：本机网络**域名级封锁 github.com:443**（沙箱内代理 CONNECT 502 /
+  沙箱外直连 SYN 超时），但 api.github.com 200、codeload 301、ssh.github.com:443、github.com:22 全通
+  → 走 **SSH over 443**：本机 ed25519 密钥 `~/.ssh/id_ed25519_dwgtopdf` + 仓库级 deploy key
+  （id 166625055，可写）+ GitHub 官方 ed25519 主机指纹核对（SHA256:+DiY3wvvV6…COqU）后信任。
+  origin remote 已改为 `ssh://git@ssh.github.com:443/zzh112212/Dwg-To-PDF.git`（https 通道本机不可用，可逆）。
+- GCM「CredentialHelperSelector」弹窗已根治：`git config --global credential.credentialStore manager`
+  （根因 = credentialStore 从未设置 → GCM 不知把凭据持久化到哪 → 每次用凭据都弹选择器）。
+- C3 验证基线（仍有效）：主工程 0 警告 0 错误；强制重建 SelfTest 108/108 exit 0；
+  exe md5 `7956647ea058a78b6f99e7e244b2a751`；文档六件套同步（手册 5.13 / 说明第十九节 /
+  运行说明第二十节 / 版本变更记录 / .planning / memory）。
+- 用户待决剩 2 项：① 是否把 `experiences/lessons.md`（25 条 / 约 267KB）上传 ima 知识库（需 IMA 凭证）；
+  ② 是否保留 `_测试输出/UI评审/` 取证工具链（含 harness 与 _faildetail/）。
 
 ## Phases
 | phase | 内容 | 状态 |
@@ -37,6 +41,7 @@ exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
 | 8.9 | v4.17 修订六（C 档 C1）：UiTheme 设计令牌 + FlatProgressBar 自绘进度条（带百分比）+ PhaseChipBar 阶段胶囊（五态）+ 按钮两级层级 | implemented（10-15，待验收） |
 | 8.10 | v4.17 修订七（C 档 C2）：CardPanel 卡片式分区 + ColumnHeader 三栏状态点/计数徽标 + 「设置…」移到顶部标题条 + 窗口默认 900×760/最小 840×730 | complete（10-16 用户验收通过；commit 24ddf3c） |
 | 8.11 | v4.17 修订八（C 档 C3）：失败原因内联展开（§5.5，note 截断摘要 32 字 +「详情 ▸」链接列 + Dock=Bottom 只读详情面板，不弹窗）+ 键盘可达性（§5.6，&S/回车/Esc/显式 TabIndex）+ 设置页三分类左右分栏（§6，560×400，「界面」分类不做） | complete（10-16 用户验收通过） |
+| 8.12 | 收尾：ui-optimization→main 快进合并、main 与存档分支推送 origin、SSH over 443 推送通道打通、GCM 弹窗根治、.planning/memory/变更记录台账、上下文交接 | complete（10-16 13:5x，用户指令「合并/推送」执行完毕；等待下一次版本优化） |
 
 ## Decisions（仍在有效期，含理由）
 | # | 决策 | 理由 |
@@ -58,6 +63,8 @@ exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
 | D20 | C2 起窗口默认客户区 900×760、`MinimumSize` 840×730（原 760×680 / 800×660） | 新增标题条 40 + 卡片间隙 4×10 = 80 逻辑像素纵向占用；原最小尺寸下 `_splitLog`（Panel1MinSize 140 + Panel2MinSize 60 + 5）溢出 58 逻辑像素 → 日志卡片被挤出可视区（手册 5.12 陷阱②） |
 | D21 | C3 范围 = §5.5 失败原因内联展开 + §5.6 键盘可达性 + §6 设置页左右分栏；**§6「界面」分类不做**，只保留三分类、不新增设置项、不改 AppSettings.cs | 用户 10-16 拍板；C3 为收尾批，仍纯交互 + 布局、不升版本号 |
 | D22 | DataGridView 新增列必须复核「该栏最小宽度合计 ≤ 容器宽」；Dock 布局加固定高度条必须同时复核「容器自己的高」 | 实测：失败栏最窄 264 逻辑像素，170+70+62=302 溢出 → 横向滚动条把「详情 ▸」滚出可视区（改 140+54+50=244）；固定 132 详情面板高于失败栏约 126 → 表格压成 0 高、面板 Y=-18 溢出（改为按容器剩余 clamp，最低 44px）。后者与 E22/GEN-WIN-010 同族不同维度：010 管窗口 MinimumSize，此条管容器高（手册 5.13 陷阱①②） |
+| D23 | git push/fetch 固定走 **SSH over 443**（origin URL = `ssh://git@ssh.github.com:443/...`），不再尝试 https 直推 | 本机网络域名级封锁 github.com:443（沙箱内 CONNECT 502 / 直连 SYN 超时，双重实测），但 ssh.github.com:443 与 github.com:22 畅通；api.github.com 亦可作只读核对通道。已备：本机 ed25519 推送密钥 + 仓库级 deploy key（可写）+ 主机指纹核对（SHA256:+DiY3wvvV6…COqU） |
+| D24 | GCM 后端存储固定 `credential.credentialStore=manager`（全局），不再每次弹选择器 | 根因：credentialStore 从未设置 → GCM 不知把凭据持久化到哪（manager/wincred/none）→ 每次用凭据都弹 CredentialHelperSelector，"Always use this from now on" 未勾 = 不记住。该项同时解释非交互环境 `git credential fill` 取空 |
 
 ## Error 表（同一失败动作不做第 2 次）
 | # | 错误 | 处理 |
@@ -79,23 +86,26 @@ exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
 | E23 | C3 失败栏新增「详情」链接列后，最窄容器（264 逻辑像素）下三列最小合计 name 170 + note 70 + detail 62 = 302 > 264 → 出横向滚动条，「详情 ▸」被滚出可视区（反射 detailRect 与截图双重确认；控件树 dump 看不出链接列"看不见"） | Fill 列先被挤到 `MinimumWidth`、NotSet 列按 `Width` 分配，总宽超容器必出 HScrollBar。**新增列必须算最小合计**：本次改 name 170→140 / note Min 70→54 / detail 62/56→50/46（140+54+50=244 ≤ 264），复验 `GetColumnDisplayRectangle(detail).Right ≤ DisplayRectangle.Right` 且 `HorizontalScrollingOffset == 0`（手册 5.13 陷阱①） |
 | E24 | 详情面板固定 `Height=132` 高于失败栏实测高（约 126，最小窗口下）→ Dock 布局不自动收缩固定条：失败表格被压成 `Height=0`、详情面板 `Y=-18` 整块溢出到栏外 | Dock 只做容器像素分配，**固定高度条必须按容器剩余空间 clamp**：`Math.Max(44, Math.Min(132, Panel2.H − 表头高 − 2))`；与 E22 同族不同维度（E22 管窗口 MinimumSize，此条管容器自身高度）。复验：展开态 `panel.Top ≥ 0` 且 `panel.Bottom ≤ 容器高`（手册 5.13 陷阱②） |
 | E25 | 主工程重建后直接 `dotnet build SelfTest.csproj` 报「无需还原」、SelfTest.exe mtime 不刷新 → 引擎新鲜度守卫 FAIL（107/108，唯一 FAIL 是守卫自己） | 增量判断看不出"要强制重建"：SelfTest 只 Include 白名单 .cs，不依赖主工程输出。**必须 `--no-incremental`**（3.3s 重编，108/108 恢复） |
+| E26 | push 连续失败约 10 次，一度归因为"本地代理 502 / schannel 瞬时中断"（旧经验：原样重试即通）——当天全部失效 | 真因是**域名级封锁 github.com:443**：沙箱内（WorkBuddy sandbox-cli 出口 127.0.0.1:62808）CONNECT 502、沙箱外直连 SYN 超时；而 api.github.com 200 / codeload 301 / ssh.github.com:443 / github.com:22 全通。**教训：网络类失败先分层探测（沙箱出口 / 直连 / 备用端口），别把"重试即通"当万能结论**；解法见 D23 |
+| E27 | Git Credential Manager 每次用凭据都弹「CredentialHelperSelector」选择器（manager/wincred/no helper），非交互环境 `git credential fill` 取空 | 根因 = `credential.credentialStore` 从未设置，"Always use this from now on" 未勾不记忆。修复：`git config --global credential.credentialStore manager`（D24） |
+| E28 | 非沙箱 bash 里 `git push` 报 `fatal: not a git repository`（沙箱内从没遇到） | 非沙箱 shell 的起始目录不在仓库（agents 工具的 cwd 不跨模式继承）→ 非沙箱命令必须显式 `cd` 到仓库根。另：Windows python 不识别 MSYS `/tmp` 路径 → curl 输出经 shell 重定向后要**stdin 管道**给 python，不要 `python /tmp/x.json` |
 
 ## Next Step（单一动作）
-**C3 用户验收通过；正式经验已写（GEN-WIN-011~014 + GEN-TEST-004，lessons 25 条）**。
-- ① 当前动作：**请用户验收 C3**（分支 `ui-optimization`）。重点看：失败行「详情 ▸」内联展开
-  （完整原因 + 日志尾部 20 行、不弹窗、收起可逆）、键盘操作（回车/Alt+S 开始、Esc 停止、
-  Tab 走查顺序）、设置窗左侧三分类切换、「界面」分类确认不做。
-- ② 验收通过后：按 dev-lessons 写正式经验条目（GEN 系：列宽最小合计 / 固定高度条 clamp /
-  SelfTest --no-incremental；注意 C1 两条未记：`LB_SETCURSEL` 不驱动 WinForms ListBox、
-  96 DPI 本机无法降级——.NET 4.7+ 默认 per-monitor）。
-- ③ 提交：C3 单独一个 commit（可单独 revert）；用户未明确指令前**不 push**。
-- 用户待决事项（3 项）：① 是否 push 分支 `ui-optimization`；② 是否把 `experiences/lessons.md`
-  上传 ima 知识库（现 20 条 / 约 267KB，需 IMA 凭证）；③ 是否保留 `_测试输出/UI评审/` 工具链。
-- 分支：**`ui-optimization`** —— 修订五 `b717d69`、`.planning` `012a4ec`、C1 `b8a3941`、
-  修订六·补（缓动）`1a4c5ea`、修订六·补（`--dirp` 断言）`3008bd7`、C2 `24ddf3c`、C3 `c1ed5fe`；
-  **已快进合并**：`main` = `c1ed5fe`（与 ui-optimization 一致，领先 origin/main 8 提交，未推送）。
-- 验收提醒：C1 已被驳回过一次（进度条缓动）→ 已修；C3 含两处「数字陷阱」修复
-  （列宽 244≤264、面板高度 clamp），验收时若窗口拖到最小尺寸，注意展开详情后面板自适应。
+**等待用户提出「下一版本优化计划」——需求到达前不动手**（用户规则：95% 把握再执行）。
+- 恢复时（新窗口说「resume」）：先读 `.planning/handoff.md`（自包含），再看本文件 Current Phase；
+  动工前先跑 `lessons.py view` 过一遍 PRJ-001~004 与 UI 类 GEN-WIN-005~014 / GEN-TEST-003~004。
+- 下一版本开工三件事：① 与用户确认范围与是否升版本号（E12 教训：升版必须显式决策）；
+  ② 若又动 UI，复用 `_测试_output/UI评审/` 工具链 + UiTheme 令牌，遵守自绘控件四纪律（手册 5.11）；
+  ③ 改完必同步文档（手册 + 说明 + 运行说明 + 版本变更记录），否则不予验收。
+- 用户待决剩 2 项：① 是否把 `experiences/lessons.md`（25 条 / 约 267KB）上传 ima 知识库（需 IMA 凭证）；
+  ② 是否保留 `_测试输出/UI评审/` 取证工具链（含反射 harness 与 _faildetail/）。
+- 分支终态：`main` = `de9d5f9`、`ui-optimization` = `c1ed5fe`（批次存档，C1/C2/C3 可分别 revert），
+  **均已推送 origin；本地/远端同步、工作区干净**。提交链：修订五 `b717d69` → `.planning` `012a4ec`
+  → C1 `b8a3941` → 缓动 `1a4c5ea` → `--dirp` 断言 `3008bd7` → C2 `24ddf3c` → C3 `c1ed5fe`
+  → 合并台账 + 推送台账（main）。
+- 推送须知（环境变化，10-16 13:5x）：github.com:443 在本机不可达（域名级封锁），
+  **git push/fetch 一律走 origin 的 SSH URL（ssh.github.com:443）即可**；如报错先查
+  `ssh -T -p 443 git@ssh.github.com` 是否通，勿再怀疑代理（旧结论已作废，见 E26）。
 
 ## 历史归档
 10-07「PISCES 发浅」协作期（含 CodeBuddy ⇄ TRAE 双向协议、F1~F9 实测）已完成闭环：

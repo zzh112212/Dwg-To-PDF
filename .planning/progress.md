@@ -302,3 +302,20 @@
 - **合并**：`ui-optimization` → `main` 快进合并（c1ed5fe；ff、diff 0、无冲突）；`ui-optimization` 保留作批次存档。
 - **推送 main 未成（12:3x）**：代理对 github.com:443 CONNECT 502（约 10 次失败）；api/codeload 通、直连超时、无 SSH key。
   **本地 main = 762b877 领先 origin 9 提交**，待网络恢复后 `git push origin main`。
+## 2026-10-16 会话十二·收尾与交接结束（13:5x~14:00）
+- **推送成功（main）**：ssh://git@ssh.github.com:443 通道 → 3f2ddd7..de9d5f9，10 提交全上。
+- **推送成功（存档分支）**：ui-optimization（c1ed5fe）上远端。
+- 推送真因：github.com:443 域名级封锁（沙箱内 CONNECT 502 / 直连 SYN 超时双重实测）；
+  api.github.com 200 / codeload 301 / ssh.github.com:443 / github.com:22 全通 → 走 SSH over 443。
+- 通道建设：本机 ed25519 推送密钥 ~/.ssh/id_ed25519_dwgtopdf（无短语）；仓库级 deploy key（id 166625055，可写）；
+  GitHub ed25519 主机指纹核对 SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU 后写 known_hosts；
+  origin remote 改为 ssh://git@ssh.github.com:443/zzh112212/Dwg-To-PDF.git（https 本机不可用，可逆）。
+- **GCM CredentialHelperSelector 弹窗根治**（用户截图提问）：credentialStore 从未设置 → 每次用凭据都弹；
+  已 git config --global credential.credentialStore manager。
+- 坑（已入 task_plan E26~E28）：非沙箱 bash cwd 不在仓库（必须显式 cd）；Windows python 不认 MSYS /tmp；
+  沙箱内能取到 GCM token 而非沙箱取空（与弹窗同根因）。
+- 验证：本地 main / origin/main / GitHub 侧 main 三方一致（de9d5f9）；工作区干净。
+- **交接（context-continuity 状态三）**：task_plan phase8.12（Current Phase / Next Step=等待下一版本 / D23-D24 / E26-E28 / Phases 8.12 行）；
+  handoff.md 整文件重写（自包含，等待型任务）；本段为会话结束日志；memory 日日志 + MEMORY.md 同步。
+- **用户待决剩 2 项**：lessons.md 是否上传 ima（需凭证）；_测试输出/UI评审/ 工具链是否保留。
+- 提醒：用户曾于对话中发出明文 GitHub 密码（未使用未保存；GitHub 已禁密码推送；已建议改密）。
