@@ -70,21 +70,25 @@ internal sealed partial class MainForm : Form
 
 	private DataGridView _gridFail;
 
-	private Label _lblPending;
+	// v4.17 修订六（C 档·§5.4）：三栏栏标题由 Label 改为自绘 ColumnHeader（状态色圆点 + 计数徽标）。
+	private ColumnHeader _hdrPending;
 
-	private Label _lblSuccess;
+	private ColumnHeader _hdrSuccess;
 
-	private Label _lblFail;
+	private ColumnHeader _hdrFail;
 
 	private SplitContainer _splitTop;
 
 	private SplitContainer _splitBottom;
 
-	private GroupBox _grpInput;
+	// v4.17 修订六（C 档·P3-2）：原先 7 个同权重的 GroupBox（凹陷细边框 + 标题槽）视线无落点，
+	// 主流程三卡改为自绘卡片 CardPanel（白底 + 12px 圆角 + 0.5px 描边，标题画在卡内左上）；
+	// 列表与日志区降级为 Subtle 卡片（圆角 8px），视觉权重自然降低。
+	private CardPanel _cardInput;
 
-	private GroupBox _grpOptions;
+	private CardPanel _cardOptions;
 
-	private GroupBox _grpProgress;
+	private CardPanel _cardProgress;
 
 	private readonly Dictionary<string, ItemStatus> _statusByPath = new Dictionary<string, ItemStatus>(StringComparer.OrdinalIgnoreCase);
 
@@ -148,12 +152,18 @@ internal sealed partial class MainForm : Form
 
 	private SplitContainer _splitLog;
 
+	// v4.17 修订六（C 档·§5.1）：列表 / 日志区降级为 Subtle 卡片（CardPanel，圆角 8px）。
+	private CardPanel _listCard;
+
+	private CardPanel _logCard;
+
 	private RichTextBox _txtLog;
 
 	// v4.15：日志"自动滚动到底部"开关（默认勾选；取消勾选或向上翻阅即暂停跟随）
 	private CheckBox _chkAutoScroll;
 
-	private Label _lblLogTitle;
+	// v4.17 修订六（C 档·§5.1）：日志区改为 Subtle 卡片，标题由 CardPanel 绘制，
+	// 原 _lblLogTitle 已删除（同一段文字只留一处，避免"卡片标题 + 面板标题"重复）。
 
 	// v4.17：_btnOpenLog（"打开日志文件夹"）已删除——转换不再在输出文件夹写日志文件，
 	// 输出文件夹里不会再有 logs\ 目录（用户要求）；主按钮区已有"打开输出文件夹"。
@@ -170,9 +180,14 @@ internal sealed partial class MainForm : Form
 		_baseTitle = "DWG 批量转 PDF（AutoCAD 驱动） " + Program.Version;
 		Text = _baseTitle;
 		Font = UiTheme.FontBody;
-		base.ClientSize = new Size(760, 680);
-		// v4.17 修订四（P1-6）：原来未设最小尺寸，窗口可被拖到布局崩坏（三栏/按钮行挤成一团）
-		MinimumSize = new Size(800, 660);
+		// v4.17 修订六（C 档·§5.1）：页面底色 #F5F5F3，白卡片之间留 10px 间隙"浮"起来
+		BackColor = UiTheme.PageBackground;
+		// v4.17 修订四（P1-6）：原来未设最小尺寸，窗口可被拖到布局崩坏（三栏/按钮行挤成一团）。
+		// v4.17 修订六（C 档·§5.1）：新增顶部标题条 40 + 卡片间隙 4×10 = 80 逻辑像素，
+		// 原 760×680 / 最小 800×660 已装不下（日志卡片被挤出可视区，实测 _splitLog 需 ≥205），
+		// 故默认与最小尺寸同步放大。所需客户区高度 = 453(顶部) + 22(状态栏) + 205(列表/日志) = 680。
+		base.ClientSize = new Size(900, 760);
+		MinimumSize = new Size(840, 730);
 		base.StartPosition = FormStartPosition.CenterScreen;
 		// v4.3：启动时从 settings.json 加载用户设置
 		LoadAppSettings();
@@ -197,12 +212,14 @@ private void BuildUi()
 	{
 		// ================= v3.4：Dock 布局（顶部三组 + 中部列表区 + 底部状态栏） =================
 		// ---------- 1) 输入输出 ----------
-		_grpInput = new GroupBox
+		// v4.17 修订六（C 档·P3-2）：GroupBox → CardPanel（白卡片 + 12px 圆角 + 0.5px 描边）。
+		// CardPanel 的标题高度与 GroupBox 标题槽一致，故 Height 保持 100 不变、内容区高度不变。
+		_cardInput = new CardPanel
 		{
-			Text = "输入输出",
+			Title = "输入输出",
 			Dock = DockStyle.Top,
 			Height = 100,
-			Padding = new Padding(10, 6, 10, 4)
+			Padding = new Padding(12, 4, 12, 6)
 		};
 		var tblInput = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, RowCount = 2 };
 		tblInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 86));
@@ -231,15 +248,15 @@ private void BuildUi()
 		tblInput.Controls.Add(lblOutput, 0, 1);
 		tblInput.Controls.Add(_txtOutput, 1, 1);
 		tblInput.Controls.Add(_btnOutput, 2, 1);
-		_grpInput.Controls.Add(tblInput);
+		_cardInput.Controls.Add(tblInput);
 
 		// ---------- 2) 选项（单行对齐栅格） ----------
-		_grpOptions = new GroupBox
+		_cardOptions = new CardPanel
 		{
-			Text = "选项",
+			Title = "选项",
 			Dock = DockStyle.Top,
 			Height = 92, // v4.8：80 不够容纳两行控件（含标题行约需 86px），第二行底部被裁剪
-			Padding = new Padding(10, 8, 10, 4)
+			Padding = new Padding(12, 4, 12, 6)
 		};
 		// v4.17 修订四（P1-5）：原两行共用一个 6 列 AutoSize 栅格，列宽取两行最大值 →
 		// 行 1 的"配色："标签被行 2 的复选框撑开（与下拉框之间空出 100px），行 2 又因首列 Margin 整体右移 17px。
@@ -351,16 +368,16 @@ private void BuildUi()
 		optRow2.Controls.Add(_chkBlockFrame);
 		tblOptions.Controls.Add(optRow2, 0, 1);
 		tblOptions.SetColumnSpan(optRow2, 6);
-		_grpOptions.Controls.Add(tblOptions);
+		_cardOptions.Controls.Add(tblOptions);
 
 		// ---------- 3) 进度与操作（v3.9：+阶段总览条 + 当前阶段详情） ----------
-		_grpProgress = new GroupBox
+		_cardProgress = new CardPanel
 		{
-			Text = "进度",
+			Title = "进度",
 			Dock = DockStyle.Top,
 			// v4.17 修订四：按钮行移出后高度 165 → 135（扣掉按钮行 30）
 			Height = 135,
-			Padding = new Padding(10, 6, 10, 4)
+			Padding = new Padding(12, 4, 12, 6)
 		};
 		// v3.9：阶段总览条（5 段横排：准备→图框识别→页面设置→出图→收尾）。
 		// 运行前完整展示让用户知道后续步骤；运行中当前阶段高亮、完成变绿、跳过转警告色。
@@ -465,46 +482,54 @@ private void BuildUi()
 		ApplySecondaryButton(_btnOpenOut);
 		_btnOpenOut.Click += delegate { OpenOutputFolder(); };
 
-		// v4.3：设置按钮（独立 Form 窗口，3 Tab：质量审查/块图框/打印）
-		_btnSettings = new Button { Text = "设置…", Width = btnW, Height = btnH, Margin = new Padding(0, 0, btnGap, 0) };
-		ApplySecondaryButton(_btnSettings);
-		_btnSettings.Click += OpenSettings;
+		// v4.17 修订六（C 档·§5.7）："设置…"从操作条移出，改到顶部标题条右端（见下方 §6）。
+		// 操作条只保留 4 个流程按钮——高频"开始转换"不再与低频配置同权重并列。
 		var buttonsRow = new TableLayoutPanel
 		{
 			Dock = DockStyle.Top,
-			// v4.5：移除 v4.4 的"重试失败项"按钮（用户反馈多余），恢复 5 列布局
-			ColumnCount = 5,
+			// v4.5：移除 v4.4 的"重试失败项"按钮（用户反馈多余）。
+			// v4.17 修订六：5 列 → 4 列（设置按钮已移出操作条）
+			ColumnCount = 4,
 			RowCount = 1,
 			Height = 30,
 			Margin = new Padding(0)
 		};
-		for (int i = 0; i < 5; i++) buttonsRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+		for (int i = 0; i < 4; i++) buttonsRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 		buttonsRow.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 		buttonsRow.Controls.Add(_btnStart, 0, 0);
 		buttonsRow.Controls.Add(_btnStop, 1, 0);
 		buttonsRow.Controls.Add(_btnClear, 2, 0);
 		buttonsRow.Controls.Add(_btnOpenOut, 3, 0);
-		buttonsRow.Controls.Add(_btnSettings, 4, 0);
 		// v3.9 布局顺序（自上而下）：阶段条 → 双进度条 → 阶段详情。
 		// WinForms Dock=Top：后 Add 的显示在最上（v3.8.1 buttonsRow→_progress 实测），故逆序 Add。
 		// v4.17 修订四（B 档·信息层级）：按钮行从"进度"组移出，独立为紧邻其下的操作条——
 		// "进度"组只承担展示语义（阶段条 + 双进度 + 阶段详情），操作按钮不再混在进度组内。
-		_grpProgress.Controls.Add(_lblPhaseDetail);
-		_grpProgress.Controls.Add(pctBar);
-		_grpProgress.Controls.Add(_phaseBar);
+		_cardProgress.Controls.Add(_lblPhaseDetail);
+		_cardProgress.Controls.Add(pctBar);
+		_cardProgress.Controls.Add(_phaseBar);
 		Panel actionBar = new Panel
 		{
 			Dock = DockStyle.Top,
 			Height = 46,
+			BackColor = UiTheme.PageBackground,
 			Padding = new Padding(10, 8, 10, 8)
 		};
 		buttonsRow.Dock = DockStyle.Left;
-		buttonsRow.Width = 5 * 120 + 4 * 8;
+		buttonsRow.Width = 4 * 120 + 3 * 8;
 		actionBar.Controls.Add(buttonsRow);
 
 		// ---------- 4) 三栏列表区（填充剩余空间） ----------
-		// v4.8：三栏头部统一 24px 高（原成功/待处理 19px vs 失败栏 24px，表头错位）
-		_lblPending = new Label { Text = "待处理", Dock = DockStyle.Left, AutoSize = true, Padding = new Padding(0, 4, 8, 0) };
+		// v4.17 修订六（C 档·§5.4）：三栏栏标题由"Label"改为自绘 ColumnHeader——
+		// 状态色圆点（待处理灰 / 成功绿 / 失败红）+ 计数徽标（胶囊），状态与条数一眼可读。
+		// v4.8：三栏头部统一 24px 高（原成功/待处理 19px vs 失败栏 24px，表头错位）。
+		_hdrPending = new ColumnHeader
+		{
+			Title = "待处理",
+			DotColor = UiTheme.TextDisabled,
+			BadgeBack = UiTheme.Track,
+			BadgeFore = UiTheme.TextMuted,
+			Dock = DockStyle.Top
+		};
 		// v4.12：新增"合并待转换"——与"合并失败文件"同样式：把待处理栏的文件复制到一个文件夹，
 		// 便于在大文件超限退回、或分批复转时单独处理这一批。
 		_btnCopyPending = new Button
@@ -517,13 +542,25 @@ private void BuildUi()
 			Enabled = false
 		};
 		_btnCopyPending.Click += delegate { CopyPendingToFolder(); };
-		Panel pendingHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
-		pendingHeader.Controls.Add(_lblPending);
-		pendingHeader.Controls.Add(_btnCopyPending);
-		// v4.17 修订四（P1-1）：与"待处理/失败"两栏统一为 Panel + AutoSize Label(Dock=Left + Padding)。
-		// 原 Dock=Top + MiddleLeft 的 Label 与另两栏对齐基准不同，截图可见"成功"两字偏上。
-		_lblSuccess = new Label { Text = "成功", Dock = DockStyle.Left, AutoSize = true, Padding = new Padding(0, 4, 8, 0) };
-		_lblFail = new Label { Text = "失败", Dock = DockStyle.Left, AutoSize = true, Padding = new Padding(0, 4, 8, 0) };
+		_hdrPending.Controls.Add(_btnCopyPending);
+		// v4.17 修订四（P1-1）：三栏统一为"Dock=Top 的标题条 + Dock=Fill 的表格"。
+		// v4.17 修订六（C 档·§5.4）：标题条改自绘 ColumnHeader（圆点 + 计数徽标）。
+		_hdrSuccess = new ColumnHeader
+		{
+			Title = "成功",
+			DotColor = UiTheme.Success,
+			BadgeBack = UiTheme.SuccessLight,
+			BadgeFore = UiTheme.SuccessDark,
+			Dock = DockStyle.Top
+		};
+		_hdrFail = new ColumnHeader
+		{
+			Title = "失败",
+			DotColor = UiTheme.Danger,
+			BadgeBack = UiTheme.DangerLight,
+			BadgeFore = UiTheme.DangerDark,
+			Dock = DockStyle.Top
+		};
 		_btnCopyFailed = new Button
 		{
 			Text = "合并失败文件",
@@ -534,9 +571,7 @@ private void BuildUi()
 			Enabled = false
 		};
 		_btnCopyFailed.Click += delegate { CopyFailedToFolder(); };
-		Panel failHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
-		failHeader.Controls.Add(_lblFail);
-		failHeader.Controls.Add(_btnCopyFailed);
+		_hdrFail.Controls.Add(_btnCopyFailed);
 		_gridPending = BuildGrid(isFail: false);
 		_gridSuccess = BuildGrid(isFail: false);
 		_gridFail = BuildGrid(isFail: true);
@@ -552,29 +587,36 @@ private void BuildUi()
 				catch { }
 			}
 		};
-		Panel pendingPanel = new Panel { Dock = DockStyle.Fill };
+		// v4.17 修订六：三栏容器底色统一为卡片白——ColumnHeader 用 EffectiveBackground 沿父链取底，
+		// 父链上若还是系统 Control 灰，圆点/文字就会浮在灰块上（与修订四 P0-1 同族坑）。
+		Panel pendingPanel = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
 		pendingPanel.Controls.Add(_gridPending);
-		pendingPanel.Controls.Add(pendingHeader);
-		Panel successHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
-		successHeader.Controls.Add(_lblSuccess);
-		Panel successPanel = new Panel { Dock = DockStyle.Fill };
+		pendingPanel.Controls.Add(_hdrPending);
+		Panel successPanel = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
 		successPanel.Controls.Add(_gridSuccess);
-		successPanel.Controls.Add(successHeader);
+		successPanel.Controls.Add(_hdrSuccess);
 		_splitBottom = new SplitContainer
 		{
 			Orientation = Orientation.Vertical,
 			SplitterWidth = 4,
-			Dock = DockStyle.Fill
+			Dock = DockStyle.Fill,
+			// v4.17 修订六：分隔线取页面底色，在白色卡片上呈浅灰细线（原系统 Control 灰偏重）
+			BackColor = UiTheme.PageBackground
 		};
+		_splitBottom.Panel1.BackColor = UiTheme.CardBackground;
+		_splitBottom.Panel2.BackColor = UiTheme.CardBackground;
 		_splitBottom.Panel1.Controls.Add(successPanel);
 		_splitBottom.Panel2.Controls.Add(_gridFail);
-		_splitBottom.Panel2.Controls.Add(failHeader);
+		_splitBottom.Panel2.Controls.Add(_hdrFail);
 		_splitTop = new SplitContainer
 		{
 			Orientation = Orientation.Vertical,
 			SplitterWidth = 4,
-			Dock = DockStyle.Fill
+			Dock = DockStyle.Fill,
+			BackColor = UiTheme.PageBackground
 		};
+		_splitTop.Panel1.BackColor = UiTheme.CardBackground;
+		_splitTop.Panel2.BackColor = UiTheme.CardBackground;
 		_splitTop.Panel1.Controls.Add(pendingPanel);
 		_splitTop.Panel2.Controls.Add(_splitBottom);
 
@@ -590,60 +632,109 @@ private void BuildUi()
 		};
 		// v4.17：日志只在界面显示，不再写入输出文件夹（用户要求：去掉输出文件夹的 log 文件）
 		_txtLog.AppendText("—— 转换日志 ——\r\n开始转换后，引擎日志将实时显示在这里。\r\n");
-		_lblLogTitle = new Label
-		{
-			Text = "日志（实时显示）",
-			Dock = DockStyle.Top,
-			Height = 22,
-			TextAlign = ContentAlignment.MiddleLeft,
-			Font = UiTheme.FontSmall,
-			ForeColor = UiTheme.TextMuted,
-			Padding = new Padding(0, 2, 0, 0)
-		};
 		// v4.15：日志跟随开关（默认开启；上翻日志时自动暂停，回到底部自动恢复）
+		// v4.17 修订六（C 档·§5.1）：日志区改为 Subtle 卡片，标题由 CardPanel 绘制；
+		// 复选框不再单独占一行表头，改手工定位到卡片标题条右端（Resize 时重算）。
 		_chkAutoScroll = new CheckBox
 		{
 			Text = "自动滚动",
-			Dock = DockStyle.Right,
 			Width = 86,
+			// 高度须 ≤ 卡片标题带（CardPanel.TitleHeight=16 + Padding.Top=8 = 24），
+			// 否则会压到下方的日志正文（实测 22 高时会与 RichTextBox 顶部重叠 7px）
+			Height = 20,
 			Checked = true,
-			Height = 22,
 			Margin = new Padding(0),
 			TextAlign = ContentAlignment.MiddleLeft,
 			Font = UiTheme.FontSmall,
 			ForeColor = UiTheme.TextMuted
 		};
-		Panel logHeader = new Panel { Dock = DockStyle.Top, Height = 24 };
-		// v4.17 修订四（P0-1）：WinForms 的 Dock 布局按 z-order **逆序**处理（后 Add 的先占位）。
-		// 原顺序先 Add(Dock=Right 复选框) 再 Add(Dock=Top 标题)，标题先吃满整行 →
-		// 复选框只剩 2~3px 高（实测 108×3），开关实际不可见不可点。必须标题先 Add。
-		logHeader.Controls.Add(_lblLogTitle);
-		logHeader.Controls.Add(_chkAutoScroll);
-		Panel logPanel = new Panel { Dock = DockStyle.Fill };
-		logPanel.Controls.Add(_txtLog);
-		logPanel.Controls.Add(logHeader);
+		_logCard = new CardPanel
+		{
+			Title = "日志（实时显示）",
+			Subtle = true,
+			Dock = DockStyle.Fill,
+			Padding = new Padding(10, 8, 10, 8)
+		};
+		_logCard.Controls.Add(_txtLog);
+		_logCard.Controls.Add(_chkAutoScroll);
+		// 复选框贴在卡片标题条右端：位置依赖卡片宽度，故在 Resize 时重算（幂等）
+		_logCard.Resize += delegate { PlaceLogAutoScroll(); };
+		// v4.17 修订六（C 档·§5.1）：列表区整体降级为 Subtle 卡片（标题"文件清单"）。
+		_listCard = new CardPanel
+		{
+			Title = "文件清单",
+			Subtle = true,
+			Dock = DockStyle.Fill,
+			Padding = new Padding(8, 2, 8, 8)
+		};
+		_listCard.Controls.Add(_splitTop);
 		_splitLog = new SplitContainer
 		{
 			Orientation = Orientation.Horizontal,
 			SplitterWidth = 5,
 			Dock = DockStyle.Fill,
 			Panel1MinSize = 140,
-			Panel2MinSize = 60
+			Panel2MinSize = 60,
+			BackColor = UiTheme.PageBackground
 		};
-		_splitLog.Panel1.Controls.Add(_splitTop);
-		_splitLog.Panel2.Controls.Add(logPanel);
+		_splitLog.Panel1.BackColor = UiTheme.PageBackground;
+		_splitLog.Panel2.BackColor = UiTheme.PageBackground;
+		_splitLog.Panel1.Controls.Add(_listCard);
+		_splitLog.Panel2.Controls.Add(_logCard);
 
 		StatusStrip statusStrip = new StatusStrip();
 		_lblStatus = new ToolStripStatusLabel { Text = "就绪" };
 		statusStrip.Items.Add(_lblStatus);
 		statusStrip.Dock = DockStyle.Bottom;
 
-		// Dock 布局：Fill 先加，顶部组依次，状态栏最后（占据最底部）
+		// ---------- 6) v4.17 修订六（C 档·§5.7）：客户区顶部标题条 ----------
+		// 低频配置（设置…）从操作条移到标题条右端（图标 + 文字，热区 ≥ 32×32）；
+		// 操作条因此只留 4 个流程按钮，高频"开始转换"的权重不再被配置项稀释。
+		_btnSettings = new Button
+		{
+			Text = "⚙ 设置",
+			Width = 84,
+			Height = UiTheme.HeightButton,
+			Margin = new Padding(0),
+			Dock = DockStyle.Right
+		};
+		ApplySecondaryButton(_btnSettings);
+		_btnSettings.Click += OpenSettings;
+		var lblAppTitle = new Label
+		{
+			Text = "DWG 批量转 PDF",
+			Dock = DockStyle.Left,
+			AutoSize = true,
+			TextAlign = ContentAlignment.MiddleLeft,
+			Font = UiTheme.FontBody,
+			ForeColor = UiTheme.Text,
+			Margin = new Padding(0)
+		};
+		Panel headerBar = new Panel
+		{
+			Dock = DockStyle.Top,
+			Height = 40,
+			BackColor = UiTheme.PageBackground,
+			Padding = new Padding(12, 5, 12, 5)
+		};
+		// v4.17 修订四（P0-1）教训：同一容器内 Dock=Top 的标题 + Dock=Right 的按钮，
+		// 必须标题先 Add（Dock 按 z-order 逆序布局，后 Add 的先占位）。
+		headerBar.Controls.Add(lblAppTitle);
+		headerBar.Controls.Add(_btnSettings);
+
+		// Dock 布局：Fill 先加，顶部组依次，状态栏最后（占据最底部）。
+		// v4.17 修订六（C 档·§5.1）：卡片之间插 10px 间隙 Panel——卡片浮在 #F5F5F3 页面底色上，
+		// 靠"间隙 + 圆角"分层，不用阴影（设计稿 §二 明确不用阴影）。
 		base.Controls.Add(_splitLog);
 		base.Controls.Add(actionBar);
-		base.Controls.Add(_grpProgress);
-		base.Controls.Add(_grpOptions);
-		base.Controls.Add(_grpInput);
+		base.Controls.Add(MakeCardGap());
+		base.Controls.Add(_cardProgress);
+		base.Controls.Add(MakeCardGap());
+		base.Controls.Add(_cardOptions);
+		base.Controls.Add(MakeCardGap());
+		base.Controls.Add(_cardInput);
+		base.Controls.Add(MakeCardGap());
+		base.Controls.Add(headerBar);
 		base.Controls.Add(statusStrip);
 		// v3.9：日志区初始约 120px 高（面板1 三栏列表占剩余），随后可拖拽调整。
 		// 注意：构造函数阶段窗体 Handle 尚未创建，禁止 BeginInvoke/Invoke，
@@ -720,6 +811,35 @@ private void BuildUi()
 		b.BackColor = UiTheme.CardBackground;
 	}
 
+	// ================= v4.17 修订六（C 档·§5.1）：卡片布局辅助 =================
+	/// <summary>卡片之间的 10px 间隙（页面底色）——让白卡片"浮"在 #F5F5F3 上，不用阴影。</summary>
+	private static Panel MakeCardGap()
+	{
+		return new Panel
+		{
+			Dock = DockStyle.Top,
+			Height = 10,
+			BackColor = UiTheme.PageBackground
+		};
+	}
+
+	/// <summary>把"自动滚动"复选框贴到日志卡片标题条右端（位置依赖卡片宽度，Resize 时重算）。</summary>
+	private void PlaceLogAutoScroll()
+	{
+		if (_logCard == null || _chkAutoScroll == null) return;
+		int x = _logCard.ClientSize.Width - _chkAutoScroll.Width - UiTheme.Dpi(_logCard, 10);
+		if (x < 0) x = 0;
+		_chkAutoScroll.Location = new Point(x, 0);
+	}
+
+	/// <summary>v4.17 修订六（C 档·§5.4）：把三栏实际条数同步到栏标题的计数徽标。</summary>
+	private void UpdateHeaderCounts()
+	{
+		if (_hdrPending != null && _gridPending != null) _hdrPending.Count = _gridPending.Rows.Count;
+		if (_hdrSuccess != null && _gridSuccess != null) _hdrSuccess.Count = _gridSuccess.Rows.Count;
+		if (_hdrFail != null && _gridFail != null) _hdrFail.Count = _gridFail.Rows.Count;
+	}
+
 	/// <summary>v3.4：Dock 布局已接管尺寸；此方法仅在窗口缩放时按用户拖拽比例恢复 SplitContainer 分割位置。</summary>
 	private void UpdateListBounds()
 	{
@@ -757,6 +877,14 @@ private void BuildUi()
 			// v3.9：三栏统一水平+垂直滚动，超长路径/原因可横拉查看（列头仍可拖宽）
 			ScrollBars = ScrollBars.Both
 		};
+		// v4.17 修订六（C 档·§5.4）：表头/网格线配色对齐扁平卡片。
+		// 只调色，不换控件、不改列宽策略、不动行高（设计稿 §5.4 明确）。
+		g.EnableHeadersVisualStyles = false;
+		g.ColumnHeadersDefaultCellStyle.BackColor = UiTheme.PageBackground;
+		g.ColumnHeadersDefaultCellStyle.ForeColor = UiTheme.TextMuted;
+		g.ColumnHeadersDefaultCellStyle.SelectionBackColor = UiTheme.PageBackground;
+		g.ColumnHeadersDefaultCellStyle.SelectionForeColor = UiTheme.TextMuted;
+		g.GridColor = UiTheme.Border;
 		// v4.6：失败栏整行浅红底（与"失败文件已在列表中标红"的提示文案一致）
 		if (isFail)
 		{
@@ -1042,6 +1170,7 @@ private void BuildUi()
 		if (_progressPhase != null) _progressPhase.Value = 0;
 		if (_btnCopyFailed != null) _btnCopyFailed.Enabled = _gridFail.Rows.Count > 0;
 		if (_btnCopyPending != null) _btnCopyPending.Enabled = _gridPending.Rows.Count > 0;
+		UpdateHeaderCounts();
 	}
 
 	private ItemStatus StatusFor(string path)
@@ -1085,6 +1214,7 @@ private void BuildUi()
 		grid.FirstDisplayedScrollingRowIndex = Math.Max(0, row);
 		if (st == ItemStatus.Failed && _btnCopyFailed != null) _btnCopyFailed.Enabled = true;
 		if (st == ItemStatus.Pending && _btnCopyPending != null) _btnCopyPending.Enabled = true;
+		UpdateHeaderCounts();
 	}
 
 	/// <summary>note 列取值：失败=简短失败原因，成功/待处理=源文件所在目录。</summary>

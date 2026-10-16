@@ -714,6 +714,37 @@
   本次改的 5 个文件（含 3 个新增）一个都不在名单里，SelfTest.exe 的编译源与基线完全一致，
   因此该结果不可能由本次改动引起。这比"重跑一遍基线"快得多，也比"凭感觉说无关"可靠。
 
+5.12 容器类自绘控件：CardPanel 卡片化与三个实测陷阱（2026-10-16，v4.17 修订七）
+- 背景：C2 要把同权重的 GroupBox 细边框换成"白底 + 12px 圆角 + 0.5px 描边"的卡片，
+  分区标题画在卡片内左上（不再单占一条标题槽）。
+- 关键手法：**新容器重写 `DisplayRectangle` 复刻 GroupBox 语义**——
+  内容区 = `ClientRectangle` 减 `Padding`，再整体下移"标题高度"。
+  于是原 GroupBox 里的 `tblXxx(Dock=Fill)` 原样搬进来就能自动落在标题下方，调用方零改动。
+  更进一步：标题高度取 **16 逻辑像素**（与 GroupBox 标题槽等高），各卡片 `Height`
+  **无需改动**、内容区高度也不变（实测 100 逻辑高的输入卡片，内容区仍是 74 逻辑高）。
+  这比"先换成 Panel 再逐个调 Height"省事得多，也少一次回归面。
+- 陷阱①（父链底色穿透）：**透明自绘控件的底色沿父链上溯，会穿到容器外的系统灰。**
+  `ColumnHeader`（栏标题）/ `CheckBox` 用 `UiTheme.EffectiveBackground` 取底色，
+  父链是 `SplitterPanel` / `Panel`（默认 `SystemColors.Control` 灰）→
+  圆点/文字浮在灰块上，与白卡片格格不入（`IsWindowVisible` 仍为 True，dump 看不出来，
+  只有截图能发现）。修法：把三栏容器（`pendingPanel` / `successPanel` /
+  `SplitContainer.Panel1/Panel2`）的 `BackColor` 显式设为卡片白。
+  与修订四 P0-1（Dock 逆序）同族——**凡是"看不见的父容器"参与配色，就要显式指定**。
+- 陷阱②（加一条 Top 条 = 最小尺寸不够）：C2 新增 40(顶部标题条) + 4×10(卡片间隙)
+  = 80 逻辑像素纵向占用；原 `MinimumSize = 800×660` 下客户区只有 622 逻辑高，
+  而 `_splitLog` 因 `Panel1MinSize(140) + Panel2MinSize(60) + SplitterWidth(5)`
+  硬性需要 ≥205 → 溢出 58 逻辑像素，**日志卡片被整个挤出可视区**
+  （截图里只剩列表 + 状态栏，控件树却能 dump 到它在 y=786 —— 只有截图能发现）。
+  改法：默认客户区 900×760、`MinimumSize` 840×730。
+  **教训：给 Dock 布局"加一条 Top 条"或"加卡片间隙"时，必须同步复核窗口最小尺寸**——
+  `SplitContainer` 各 Panel 的最小尺寸之和是一道**硬下限，不会自动让步**。
+- 陷阱③（标题带里的控件高度）：`CardPanel` 的标题带固定 16 逻辑高（+ `Padding.Top`），
+  放进标题带的控件**高度必须 ≤ 标题带高**，否则会压到下方正文
+  （"自动滚动"复选框 22 逻辑高时与 RichTextBox 顶部重叠 7 物理像素；改 20 即贴合）。
+- 记录备查：`Form.MinimumSize` 在 125% DPI 下实测被放大到"最小高 +16 逻辑像素"，
+  与 96 DPI（DPI 不感知路径）下不一致。属 .NET Framework 的 DPI 缩放细节，
+  两路径都**不影响布局正确性**（多出的高度全落在 Fill 区），未深挖。
+
 ---
 ## 第6章 工程构建与测试环境
 ---
