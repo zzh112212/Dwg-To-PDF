@@ -745,6 +745,46 @@
   与 96 DPI（DPI 不感知路径）下不一致。属 .NET Framework 的 DPI 缩放细节，
   两路径都**不影响布局正确性**（多出的高度全落在 Fill 区），未深挖。
 
+5.13 界面优化 C 档·第三批 C3：失败原因内联展开与三处"数字陷阱"（2026-10-16，v4.17 修订七）
+- 背景：C3 = §5.5 失败原因内联展开 + §5.6 键盘可达性 + §6 设置页左右分栏；
+  用户 10-16 追加拍板：**§6「界面」分类不做**，只保留 质量审查 / 识别块图框 / 打印输出
+  三分类，不新增设置项、不改 AppSettings.cs。
+- §5.5 形态：note 列只显示截断摘要（`Truncate(full, 32)`；`_noteByPath` 仍存全文 →
+  失败原因分类统计不受影响）；失败栏新增「详情 ▸」链接列；Dock=Bottom 只读详情面板
+  （完整原因 + 日志尾部 20 行），**不弹窗**；同行再点 = 收起，链接变「收起 ▾」；
+  行被移走/清空自动收起（`SyncFailDetail`）。
+- 陷阱①（新增列必须复核"该栏装得下"）：失败栏最窄实测仅 **264 逻辑像素**，
+  而三列最小合计 name 170 + note 70 + detail 62 = **302 > 264** → 出横向滚动条，
+  「详情 ▸」被滚出可视区（反射 detailRect 与截图双重确认，dump 控件树看不出来）。
+  分配规则：Fill 列先被挤压到 `MinimumWidth`、NotSet 列按 `Width` 分配，
+  总宽超容器就出 HScrollBar。修法：三列最小合计压进容器
+  （name 170→140、note Min 70→54、detail 62/56→50/46，合计 244 ≤ 264），
+  复验 `GetColumnDisplayRectangle(detail).Right ≤ DisplayRectangle.Right` 且
+  `HorizontalScrollingOffset == 0`。
+- 陷阱②（固定高度条不会自动收缩）：详情面板标称 132px，而失败栏
+  （`_splitBottom.Panel2`）在最小窗口下仅约 126px（表头 24 + 表格 102）。
+  Dock 语义只做"容器像素分配"，**固定条高于容器时不会自动变矮** →
+  表格被压成 Height=0、面板 Y=-18 整块溢出到栏外。
+  修法：固定高度条按容器剩余空间 clamp（`Math.Max(44, Math.Min(132, Panel2.H − 表头高 − 2))`），
+  收起即恢复。与 GEN-WIN-010 同族但维度不同：010 管"窗口 MinimumSize"，
+  本条管"容器自己的高"——**加固定高度条要同时复核两处**。
+- §5.6 形态：`开始转换(&S)`（Alt+S 加速键）；`AcceptButton = _btnStart`（回车即开始）；
+  `KeyPreview = true` + Esc → `StopRequested()`（仅转换中且停止按钮可用时生效）；
+  全控件显式 TabIndex（输入卡 → 选项卡 → 操作条 → 日志区）。
+- 反射 harness 实测模式（私有窗体 UI 验证，`_测试输出/UI评审/_faildetail/`）：
+  `Assembly.LoadFrom` + `Activator.CreateInstance(type, nonPublic: true)` 实例化
+  `internal sealed MainForm`，反射调 `UpdateRow` 灌失败行、`ToggleFailDetail` 展开面板；
+  键盘消息用 `PostMessage WM_KEYDOWN/WM_KEYUP VK_ESCAPE` 走真实消息路径
+  （KeyPreview → Form.KeyDown → StopRequested），断言点取 `_btnStop.Enabled=false` /
+  `Text="正在停止…"`；设置文件在 `%APPDATA%\DwgToPdf\settings.json`，
+  **只读，勿 `form.Close()`（会写回）**。
+  两个实操坑：① 字段类型别猜——`_hdrFail` 是自绘 `ColumnHeader` 不是 DataGridView，
+  cast 崩 harness；② `Form.AcceptButton` 静态类型是 `IButtonControl`，没有 `.Text`。
+- 96 DPI 复核（延续 5.12 的结论）：本机 .NET Framework 4.7+ 默认 per-monitor DPI 感知，
+  app.config 的 `dpiAwareness` 三种取值（无 / Unaware / DpiUnaware）**均无法把进程降到
+  96 DPI**（实测 headerBar 高恒为 50 = 40×1.25）；窗口 840×730 是 settings.json 恢复值。
+  环境类结论，换机先复核再引用（GEN-DOC-001）。
+
 ---
 ## 第6章 工程构建与测试环境
 ---

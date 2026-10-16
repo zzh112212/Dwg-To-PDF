@@ -1,4 +1,4 @@
-﻿# 会话日志（追加式）
+﻿﻿# 会话日志（追加式）
 
 ## 2026-10-07 会话一（v4.16 修复 + 根因定位 + 建仓）
 - 研读手册第26章/速查表；实测 v4.15 产物页面 1682x2378(4A0) 而非参照的 2A0
@@ -258,3 +258,44 @@
   说明 **第十八节 修订七** / 运行说明 **第十九节 修订七** / 版本变更记录（修订七行 + 10-16 事件段）。
 - 取证产物（`_测试输出/UI评审/`）：`c2_main.png`、`c2b_main.png`、`c2c_main*.png`（125%）、
   `c2_96dpi.png`（96 DPI 路径）、`c2b_controls.txt` / `c2_nocfg_controls.txt`（控件树双路径对比）。
+
+## 2026-10-16 会话 · C3 落地（C 档第三批·收尾：失败原因内联展开 + 键盘可达性 + 设置页三分类分栏）
+
+- **C3 范围先与用户对齐**：§6 的「界面」分类**不做**（用户拍板），只保留 质量审查/识别块图框/
+  打印输出 三分类；不新增设置项、不改 AppSettings.cs；仍纯交互 + 布局、不升版本号。
+- **C3 实施**：
+  · §5.5（MainForm.cs）：note 列截断摘要 `Truncate(full, 32)`（全文仍存 `_noteByPath`，
+    分类统计不受影响）；失败栏新增「详情 ▸」链接列（`DataGridViewLinkColumn` 50px）；
+    点链接 → Dock=Bottom 只读详情面板（完整原因 + `LogTail(20)` 日志尾部），**不弹窗**；
+    同行再点收起「收起 ▾」；`RefreshListUi`/行移走时 `SyncFailDetail` 自动收起；
+    Panel2 Add 顺序：`_gridFail` → `_failDetailPanel` → `_hdrFail`（Dock 逆序：Fill 先 Add）。
+  · §5.6：`开始转换(&S)`、`AcceptButton = _btnStart`、`KeyPreview` + `OnMainFormKeyDown`
+    （Esc → `StopRequested()`，仅转换中且停止按钮可用）、全控件显式 TabIndex。
+  · §6（SettingsForm.cs）：`TabControl` → 左 132px 自绘 `ListBox`（OwnerDrawFixed，
+    选中 PrimaryLight/PrimaryDark）+ 右内容卡片；窗口 480×350 → 560×400；
+    三个内容页 Panel 常驻、只切 Visible；8 处 `ForeColor` 改 `UiTheme.TextMuted`。
+- **实测踩到三个坑（均已修，手册 5.13 / task_plan E23~E25）**：
+  ① **列宽最小合计溢出**：失败栏最窄 264 逻辑像素，170+70+62=302 → 横向滚动条把
+     「详情 ▸」滚出可视区 → 三列改 140/54/50（合计 244 ≤ 264）；
+     复验判据 `GetColumnDisplayRectangle(detail).Right ≤ DisplayRectangle.Right` 且
+     `HorizontalScrollingOffset == 0`。
+  ② **固定高度条高于容器**：详情面板 132 > 失败栏约 126（表头 24 + 表格 102）→
+     表格压成 0 高、面板 Y=-18 溢出 → 高度按容器剩余 clamp（`Math.Max(44, Min(132, 剩余))`）。
+  ③ **SelfTest 增量不重编**：主工程重建后普通 build 报「无需还原」、mtime 不刷新
+     → 引擎新鲜度守卫假 FAIL（107/108）→ `--no-incremental` 真重编后 108/108。
+- **反射 harness 实机验证**（`_测试输出/UI评审/_faildetail/`，本段会话新建）：
+  `Assembly.LoadFrom` + `Activator.CreateInstance(nonPublic)` 实例化 `MainForm`，
+  反射灌 3 行失败数据、调 `ToggleFailDetail`、`PostMessage` 真实按键 Esc；
+  断言全过：AcceptButton 指向开始转换 / Esc → 停止按钮 `Enabled=False`+「正在停止…」/
+  detail 列在可视区 + 无横向滚动 / 面板 Top=26≥0 不溢出 / 折叠-再折叠截图字节一致。
+  实操坑：`_hdrFail` 是 `ColumnHeader` 不是 DataGridView；`Form.AcceptButton` 是
+  `IButtonControl` 无 `.Text`；net48 dynamic 需 Microsoft.CSharp（未引 → 改反射取 Bounds）；
+  `GetColumnDisplayRectangle` 只有 `(int index, bool)` 重载。
+- **验证链**：主工程编译 **0 警告 0 错误** → 强制重建 SelfTest → **108/108 PASS（exit 0）**
+  → 复抓截图：主窗（1050×913）+ 设置窗（720×549，三分类切换各一张）+ 失败详情三态
+  → exe 重发布 **md5 `7956647ea058a78b6f99e7e244b2a751`**。
+- 文档同步：手册 **5.13** / 说明 **第十九节 修订八** / 运行说明 **第二十节 修订八** /
+  版本变更记录（修订八行 + D8 + 10-16 事件段）/ handoff + task_plan（phase8.11 + D21/D22 + E23~E25）。
+- 用户 10-16 追加拍板留痕：C2 验收「通过」；C3 范围（界面分类不做）；`ui-optimization` 暂不推送。
+- **已提交**（C3 独立 commit，10 文件 +622/−64，**未 push**）。
+- 用户弹窗验收 **通过**；经验库新增 5 条正式条目（20 → 25：GEN-WIN-011/012/013/014 + GEN-TEST-004），`check`/`toc` 通过。

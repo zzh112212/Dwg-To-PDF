@@ -77,6 +77,17 @@ internal sealed partial class MainForm : Form
 
 	private ColumnHeader _hdrFail;
 
+	// v4.17 修订七（C 档·§5.5）：失败原因内联展开——点失败行的「详情」链接，在失败栏下方展开
+	// 只读详情面板（完整原因 + 日志尾部 20 行）。不弹窗（弹窗会打断批量操作节奏）。
+	private Panel _failDetailPanel;
+
+	private Label _lblFailDetailTitle;
+
+	private TextBox _txtFailDetail;
+
+	/// <summary>当前展开详情的失败文件路径（null = 未展开）。</summary>
+	private string _failDetailPath;
+
 	private SplitContainer _splitTop;
 
 	private SplitContainer _splitBottom;
@@ -465,7 +476,8 @@ private void BuildUi()
 		//   主按钮（开始转换）= 实心主色底 + 白字 + 加粗；
 		//   次按钮            = 白底 + 统一描边 + 正文色，禁用时文字转灰（原禁用态几乎看不出）。
 		int btnW = 120, btnH = UiTheme.HeightButton, btnGap = UiTheme.Space2;
-		_btnStart = new Button { Text = "开始转换", Width = btnW, Height = btnH, Margin = new Padding(0, 0, btnGap, 0) };
+		// v4.17 修订七（C 档·§5.6）：主按钮带加速键 Alt+S（文案 "开始转换(S)"，S 带下划线）
+		_btnStart = new Button { Text = "开始转换(&S)", Width = btnW, Height = btnH, Margin = new Padding(0, 0, btnGap, 0) };
 		ApplyPrimaryButton(_btnStart);
 		_btnStart.Click += delegate { Start(); };
 		_btnStop = new Button { Text = "停止", Width = btnW, Height = btnH, Enabled = false, Margin = new Padding(0, 0, btnGap, 0) };
@@ -580,11 +592,20 @@ private void BuildUi()
 		_gridFail.Dock = DockStyle.Fill;
 		_gridFail.CellContentClick += (sender, e) =>
 		{
-			if (e.RowIndex < 0 || e.ColumnIndex != _gridFail.Columns["name"].Index) return;
-			if (_gridFail.Rows[e.RowIndex].Tag is string p && File.Exists(p))
+			if (e.RowIndex < 0) return;
+			if (e.ColumnIndex == _gridFail.Columns["name"].Index)
 			{
-				try { Process.Start("explorer.exe", "/select,\"" + p + "\""); }
-				catch { }
+				if (_gridFail.Rows[e.RowIndex].Tag is string p && File.Exists(p))
+				{
+					try { Process.Start("explorer.exe", "/select,\"" + p + "\""); }
+					catch { }
+				}
+				return;
+			}
+			// v4.17 修订七（C 档·§5.5）：点「详情」链接 → 在失败栏下方展开/收起只读详情面板
+			if (_gridFail.Columns.Contains("detail") && e.ColumnIndex == _gridFail.Columns["detail"].Index)
+			{
+				ToggleFailDetail(e.RowIndex);
 			}
 		};
 		// v4.17 修订六：三栏容器底色统一为卡片白——ColumnHeader 用 EffectiveBackground 沿父链取底，
@@ -595,6 +616,57 @@ private void BuildUi()
 		Panel successPanel = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
 		successPanel.Controls.Add(_gridSuccess);
 		successPanel.Controls.Add(_hdrSuccess);
+
+		// v4.17 修订七（C 档·§5.5）：失败详情面板（默认隐藏，点失败行「详情」链接时展开）。
+		// 贴在失败栏下方（Dock=Bottom），展开时只压缩上方失败表格，不影响其它两栏。
+		_lblFailDetailTitle = new Label
+		{
+			Dock = DockStyle.Fill,
+			TextAlign = ContentAlignment.MiddleLeft,
+			AutoEllipsis = true,
+			Font = UiTheme.FontSmall,
+			ForeColor = UiTheme.DangerDark,
+			Margin = new Padding(0)
+		};
+		var btnFailDetailClose = new Button
+		{
+			Text = "收起",
+			Dock = DockStyle.Right,
+			Width = 56,
+			Height = 22,
+			Margin = new Padding(4, 0, 0, 0),
+			FlatStyle = FlatStyle.Flat
+		};
+		btnFailDetailClose.Click += delegate { HideFailDetail(); };
+		var failDetailHeader = new Panel { Dock = DockStyle.Top, Height = 22, BackColor = UiTheme.DangerLight };
+		// Dock 按 z-order 逆序布局：Fill 的标题先 Add，否则会被 Right 的按钮挤没（手册 5.10）。
+		failDetailHeader.Controls.Add(_lblFailDetailTitle);
+		failDetailHeader.Controls.Add(btnFailDetailClose);
+
+		_txtFailDetail = new TextBox
+		{
+			Dock = DockStyle.Fill,
+			Multiline = true,
+			ReadOnly = true,
+			WordWrap = false,
+			ScrollBars = ScrollBars.Both,
+			BackColor = UiTheme.ReadOnlyBackground,
+			Font = UiTheme.FontMono,
+			BorderStyle = BorderStyle.FixedSingle,
+			Margin = new Padding(0)
+		};
+		_failDetailPanel = new Panel
+		{
+			Dock = DockStyle.Bottom,
+			Height = 132,
+			BackColor = UiTheme.DangerLight,
+			Padding = new Padding(8, 4, 8, 8),
+			Visible = false
+		};
+		// Fill 的正文先 Add（布局时最后处理、拿到剩余高度），Top 的表头后 Add。
+		_failDetailPanel.Controls.Add(_txtFailDetail);
+		_failDetailPanel.Controls.Add(failDetailHeader);
+
 		_splitBottom = new SplitContainer
 		{
 			Orientation = Orientation.Vertical,
@@ -606,7 +678,10 @@ private void BuildUi()
 		_splitBottom.Panel1.BackColor = UiTheme.CardBackground;
 		_splitBottom.Panel2.BackColor = UiTheme.CardBackground;
 		_splitBottom.Panel1.Controls.Add(successPanel);
+		// Add 顺序决定 Dock 布局次序（后 Add 的先占位）：_gridFail 先 Add → 最后布局、拿到 Fill 剩余区；
+		// _failDetailPanel 次之 → Bottom；_hdrFail 最后 → Top。顺序错会让详情面板把表格挤没。
 		_splitBottom.Panel2.Controls.Add(_gridFail);
+		_splitBottom.Panel2.Controls.Add(_failDetailPanel);
 		_splitBottom.Panel2.Controls.Add(_hdrFail);
 		_splitTop = new SplitContainer
 		{
@@ -765,6 +840,56 @@ private void BuildUi()
 		Shown += async (senderForm, e) => await RunFirstUseSelfCheckAsync();
 		SetPhaseBarIdle();
 		RefreshListUi();
+
+		// ---------- v4.17 修订七（C 档·§5.6）：键盘可达性 ----------
+		// 回车＝开始转换；Esc＝停止当前转换（KeyPreview 让窗体先于子控件收键，
+		// 否则焦点落在列表/日志里时 Esc 会被子控件吞掉）。
+		AcceptButton = _btnStart;
+		KeyPreview = true;
+		KeyDown += OnMainFormKeyDown;
+
+		// 显式 TabIndex：输入区 → 选项区 → 操作条 → 设置 → 列表 → 日志。
+		// 顶层容器必须显式设——默认 TabIndex 随 Add 顺序，而 Dock 布局是逆序 Add，
+		// _splitLog 最先 Add → 默认会排到最前，与视觉顺序相反。
+		_cardInput.TabIndex = 0;
+		_cardOptions.TabIndex = 1;
+		_cardProgress.TabIndex = 2;
+		actionBar.TabIndex = 3;
+		headerBar.TabIndex = 4;
+		_splitLog.TabIndex = 5;
+		// 输入区（容器内相对序号）
+		_txtInput.TabIndex = 0;
+		_btnInput.TabIndex = 1;
+		_btnInputFolder.TabIndex = 2;
+		_txtOutput.TabIndex = 3;
+		_btnOutput.TabIndex = 4;
+		// 选项区
+		_rbMarginOn.TabIndex = 0;
+		_rbMarginOff.TabIndex = 1;
+		_cmbPrint.TabIndex = 2;
+		_cmbMode.TabIndex = 3;
+		optRow2.TabIndex = 4;
+		_chkLineWeight.TabIndex = 0;
+		_chkQualityCheck.TabIndex = 1;
+		_chkBlockFrame.TabIndex = 2;
+		// 操作条
+		_btnStart.TabIndex = 0;
+		_btnStop.TabIndex = 1;
+		_btnClear.TabIndex = 2;
+		_btnOpenOut.TabIndex = 3;
+		// 标题条
+		_btnSettings.TabIndex = 0;
+	}
+
+	/// <summary>v4.17 修订七（C 档·§5.6）：Esc → 停止当前转换（仅在转换进行中且尚未下达停止时生效）。</summary>
+	private void OnMainFormKeyDown(object sender, KeyEventArgs e)
+	{
+		if (e.KeyCode == Keys.Escape && _converting && _btnStop != null && _btnStop.Enabled)
+		{
+			StopRequested();
+			e.Handled = true;
+			e.SuppressKeyPress = true;
+		}
 	}
 
 	// ================= v4.17 修订六（C 档）：按钮层级 =================
@@ -900,22 +1025,42 @@ private void BuildUi()
 				ActiveLinkColor = Color.Blue,
 				LinkColor = Color.RoyalBlue,
 				VisitedLinkColor = Color.Purple,
-				Width = 170
+				// v4.17 修订七（C 档·§5.5）：170 → 140。失败栏最小窗口下仅约 264 逻辑像素宽，
+				// 需容纳 name + note + detail 三列；170+70+62=302 会溢出并出横向滚动条，
+				// 「详情」链接被滚出可视区（实测反射与截图双重确认）。
+				Width = 140
 			};
 			g.Columns.Add(nameCol);
 		}
 		else
 		{
 			g.Columns.Add("name", "文件");
-			g.Columns["name"].Width = 170;
+			g.Columns["name"].Width = 140;
 		}
 		g.Columns.Add("note", isFail ? "原因" : "目录");
 		// v4.8：note 列改 Fill 撑满容器（用户反馈：固定 320 宽导致表格右侧大片空白）。
 		// v4.12 修复：MinimumWidth 320 → 70。失败栏只占窗口 1/3 宽，220+320=540 的最小宽度
 		// 超过栏宽时 Fill 列不会出横向滚动条 → 右侧内容被裁（用户反馈"失败一栏右边看不到"）。
-		// 现在列宽可自由压缩到栏宽，长文本鼠标悬停看 Tooltip（DataGridView 默认开启）。
+		// v4.17 修订七（C 档·§5.5）：70 → 54，为新增的「详情」链接列腾出空间。
 		g.Columns["note"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-		g.Columns["note"].MinimumWidth = 70;
+		g.Columns["note"].MinimumWidth = 54;
+		if (isFail)
+		{
+			// v4.17 修订七（C 档·§5.5）：note 列只放"截断摘要"，完整原因移入可展开的详情面板；
+			// 新增窄链接列作展开入口（点击在「详情 ▸」/「收起 ▾」间切换，见 UpdateFailDetailLinkText）。
+			g.Columns.Add(new DataGridViewLinkColumn
+			{
+				Name = "detail",
+				HeaderText = "",
+				Width = 50,
+				MinimumWidth = 46,
+				Resizable = DataGridViewTriState.False,
+				LinkColor = UiTheme.PrimaryDark,
+				ActiveLinkColor = UiTheme.Primary,
+				VisitedLinkColor = UiTheme.PrimaryDark,
+				TrackVisitedState = false
+			});
+		}
 		// v4.17 修订四（P2-6）：空列表绘制"暂无文件"占位（DataGridView 无内置空状态）
 		g.Paint += delegate (object sender, PaintEventArgs e)
 		{
@@ -1155,6 +1300,8 @@ private void BuildUi()
 		_gridPending.Rows.Clear();
 		_gridSuccess.Rows.Clear();
 		_gridFail.Rows.Clear();
+		// v4.17 修订七（C 档·§5.5）：清单重建 → 详情面板所指的行已不存在，收起
+		HideFailDetail();
 		foreach (string path in _pendingFiles)
 		{
 			AddRow(path, StatusFor(path));
@@ -1193,6 +1340,7 @@ private void BuildUi()
 		grid.Rows[idx].Tag = path;
 		grid.Rows[idx].Cells["name"].Value = Path.GetFileName(path);
 		grid.Rows[idx].Cells["note"].Value = NoteText(path, st, null);
+		InitFailDetailCell(grid, idx, path);
 	}
 
 	/// <summary>根据新状态把该文件的行实时归位到对应栏（边转换边归位），并刷新该行显示。</summary>
@@ -1211,21 +1359,37 @@ private void BuildUi()
 		grid.Rows[row].Tag = path;
 		grid.Rows[row].Cells["name"].Value = Path.GetFileName(path);
 		grid.Rows[row].Cells["note"].Value = NoteText(path, st, note);
+		InitFailDetailCell(grid, row, path);
 		grid.FirstDisplayedScrollingRowIndex = Math.Max(0, row);
 		if (st == ItemStatus.Failed && _btnCopyFailed != null) _btnCopyFailed.Enabled = true;
 		if (st == ItemStatus.Pending && _btnCopyPending != null) _btnCopyPending.Enabled = true;
 		UpdateHeaderCounts();
+		// v4.17 修订七（C 档·§5.5）：该行若已离开失败栏，则自动收起它对应的详情面板
+		SyncFailDetail();
 	}
 
-	/// <summary>note 列取值：失败=简短失败原因，成功/待处理=源文件所在目录。</summary>
+	/// <summary>note 列取值：失败=失败原因（截断摘要），成功/待处理=源文件所在目录。
+	/// v4.17 修订七（C 档·§5.5）：失败原因列只显示截断摘要，完整原文见「详情」面板
+	/// （_noteByPath 仍保留全文，故失败原因分类统计不受影响）。
+	/// 截断 32 字：note 列实际可显示约 4~6 个全角字，超出本就会被列宽裁剪，
+	/// 摘要取 32 字让 UI 表现不变而单元格底层文本更短。</summary>
 	private string NoteText(string path, ItemStatus st, string incomingNote)
 	{
 		if (st == ItemStatus.Failed)
 		{
-			if (!string.IsNullOrEmpty(incomingNote)) return incomingNote;
-			return _noteByPath.TryGetValue(path, out string rev) ? rev : "";
+			string full = !string.IsNullOrEmpty(incomingNote)
+				? incomingNote
+				: (_noteByPath.TryGetValue(path, out string rev) ? rev : "");
+			return Truncate(full, 32);
 		}
 		return Path.GetDirectoryName(path) ?? "";
+	}
+
+	/// <summary>按字符数截断并追加省略号（null/空原样返回）。</summary>
+	private static string Truncate(string s, int max)
+	{
+		if (string.IsNullOrEmpty(s)) return s ?? "";
+		return s.Length <= max ? s : s.Substring(0, max) + "…";
 	}
 
 	private int FindRowInGrid(DataGridView grid, string file)
@@ -1238,6 +1402,97 @@ private void BuildUi()
 			}
 		}
 		return -1;
+	}
+
+	// ================= v4.17 修订七（C 档·§5.5）：失败原因内联展开 =================
+	/// <summary>展开/收起指定失败行的详情面板：同行再点＝收起；点另一行＝换行显示。</summary>
+	private void ToggleFailDetail(int rowIndex)
+	{
+		if (_failDetailPanel == null || rowIndex < 0 || rowIndex >= _gridFail.Rows.Count) return;
+		if (!(_gridFail.Rows[rowIndex].Tag is string path) || path.Length == 0) return;
+		bool sameRow = _failDetailPanel.Visible
+			&& string.Equals(_failDetailPath, path, StringComparison.OrdinalIgnoreCase);
+		if (sameRow) { HideFailDetail(); return; }
+		_failDetailPath = path;
+		_lblFailDetailTitle.Text = "失败详情：" + Path.GetFileName(path);
+		_txtFailDetail.Text = BuildFailDetailText(path);
+		_txtFailDetail.SelectionStart = 0;
+		_txtFailDetail.SelectionLength = 0;
+		// 详情面板标称 132px，但失败栏（_splitBottom.Panel2）被窗口高度/拖拽压矮时，
+		// 固定 132 会把失败表格和面板一起挤出容器：实测最小窗口下失败栏仅约 126px
+		// （表头 24px + 表格 102px），面板 132 > 102 → grid 高被压成 0、面板 Y=-18 溢出。
+		// 改为按失败栏剩余空间收缩（最低保 44px：约 2 行小字 + 内边距），收起即恢复原高度。
+		int p2H = _splitBottom != null ? _splitBottom.Panel2.Height : 0;
+		int hdrH = _hdrFail != null ? _hdrFail.Height : 0;
+		int avail = p2H - hdrH - 2;
+		if (avail > 0) _failDetailPanel.Height = Math.Max(44, Math.Min(132, avail));
+		_failDetailPanel.Visible = true;
+		UpdateFailDetailLinkText();
+	}
+
+	/// <summary>收起详情面板并复位链接文案。</summary>
+	private void HideFailDetail()
+	{
+		if (_failDetailPanel == null) return;
+		_failDetailPath = null;
+		_failDetailPanel.Visible = false;
+		UpdateFailDetailLinkText();
+	}
+
+	/// <summary>行被移走/清空后，若详情面板所指的行已不在失败栏则自动收起。</summary>
+	private void SyncFailDetail()
+	{
+		if (_failDetailPanel == null || !_failDetailPanel.Visible) return;
+		if (string.IsNullOrEmpty(_failDetailPath) || FindRowInGrid(_gridFail, _failDetailPath) < 0)
+		{
+			HideFailDetail();
+		}
+	}
+
+	/// <summary>把链接文案刷成与当前展开状态一致（未展开的行一律「详情 ▸」）。</summary>
+	private void UpdateFailDetailLinkText()
+	{
+		if (_gridFail == null || !_gridFail.Columns.Contains("detail")) return;
+		for (int i = 0; i < _gridFail.Rows.Count; i++)
+		{
+			bool open = _failDetailPanel != null && _failDetailPanel.Visible
+				&& _gridFail.Rows[i].Tag is string p
+				&& string.Equals(p, _failDetailPath, StringComparison.OrdinalIgnoreCase);
+			_gridFail.Rows[i].Cells["detail"].Value = open ? "收起 ▾" : "详情 ▸";
+		}
+	}
+
+	/// <summary>失败栏新增行时补上「详情」链接文案（其它栏无此列，直接跳过）。</summary>
+	private void InitFailDetailCell(DataGridView grid, int rowIndex, string path)
+	{
+		if (grid == null || !grid.Columns.Contains("detail")) return;
+		bool open = _failDetailPanel != null && _failDetailPanel.Visible
+			&& string.Equals(path, _failDetailPath, StringComparison.OrdinalIgnoreCase);
+		grid.Rows[rowIndex].Cells["detail"].Value = open ? "收起 ▾" : "详情 ▸";
+	}
+
+	/// <summary>详情正文 = 完整路径 + 完整失败原因 + 日志尾部 20 行。</summary>
+	private string BuildFailDetailText(string path)
+	{
+		_noteByPath.TryGetValue(path, out string reason);
+		var sb = new System.Text.StringBuilder();
+		sb.AppendLine("文件：" + path);
+		sb.AppendLine();
+		sb.AppendLine("失败原因：");
+		sb.AppendLine(string.IsNullOrWhiteSpace(reason) ? "（无记录）" : reason);
+		sb.AppendLine();
+		sb.AppendLine("—— 日志尾部 20 行 ——");
+		sb.Append(LogTail(20));
+		return sb.ToString();
+	}
+
+	/// <summary>取日志控件文本的最后 n 行（不足 n 行则全取）。</summary>
+	private string LogTail(int n)
+	{
+		if (_txtLog == null || n <= 0) return "";
+		string[] lines = _txtLog.Text.Replace("\r\n", "\n").Split('\n');
+		int start = Math.Max(0, lines.Length - n);
+		return string.Join(Environment.NewLine, lines, start, lines.Length - start);
 	}
 
 	private void PickFolder(TextBox box, string desc)

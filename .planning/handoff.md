@@ -1,8 +1,8 @@
-# Handoff: DwgToPdf 工具 v4.17 修订七（C 档 C2：卡片式分区 + 三栏状态点/徽标 + 顶部标题条）—— 待验收
+# Handoff: DwgToPdf 工具 v4.17 修订八（C 档 C3：失败原因内联展开 + 键盘可达性 + 设置页三分类分栏）—— 待验收
 
 交接简报。**接收方是零上下文的新会话，本文件必须自包含。**
 
-- 更新时间：2026-10-16 09:3x（C2 已落地并自验通过；待用户验收；下一步 C3）
+- 更新时间：2026-10-16 11:0x（C3 已落地、已验收通过、已独立 commit【未 push】；C1/C2 经验已入库，C1 自身经验条目仍待用户确认后补写）
 - 计划文件：`.planning/task_plan.md`（阶段/决策/错误表）
 
 ## Task
@@ -33,10 +33,47 @@ C 档 = 界面优化第二轮（设计稿 `_测试输出/UI评审/UI优化设计
 - `源码工程/CadConverter.cs` / `PlotSession.cs` / `PageSetupPreprocessor.cs` —— UCS 条件复位（`WORLDUCS==1` 直接 return false）
 - `源码工程/Program.cs` —— `Version = "v4.17"`（**勿擅改，升版须经用户同意**）
 - `自测试工程/Program.cs` —— 108 条断言 + `--dirp`/`--dirs` E2E 模式 + `FindPdfFolder`
-- `发布程序 v4.17/DwgToPdf.exe` —— 10-15 13:15 刷新，UTF-16LE 检索确认含 `v4.17`、无 `v4.18`
+- `发布程序 v4.17/DwgToPdf.exe` —— 10-16 10:3x 随 C3 刷新（列宽 140/54/50 + 详情面板高度 clamp + 键盘可达性），md5 `7956647ea058a78b6f99e7e244b2a751`（C2 版为 `413e22a5e7728e433639a0ad978f73da`）
 - `.planning/` —— findings / handoff / progress / task_plan 四件套（已入库；trae_report.md 已于 13:32 被用户手动删除，见 What Was Tried）
 
 ## Current State
+
+### 2026-10-16 10:4x：修订八（C 档 C3）—— **最新，优先看这里**
+
+- **C3 范围**（用户 10-16 拍板）：§5.5 失败原因内联展开 + §5.6 键盘可达性 + §6 设置页
+  左右分栏；**§6「界面」分类不做**，只保留 质量审查 / 识别块图框 / 打印输出 三分类，
+  不新增设置项、不改 AppSettings.cs。仍为纯交互 + 布局，不升版本号。
+- **C3 内容**：
+  · §5.5 note 列截断摘要（`Truncate(full, 32)`，全文存 `_noteByPath` 不受影响）；
+    失败栏新增「详情 ▸」链接列 → Dock=Bottom 只读详情面板（完整原因 + 日志尾部 20 行），
+    不弹窗；同行再点收起、行移走/清空自动收起；**详情面板高度按失败栏剩余空间 clamp
+    （标称 132，最低保 44）**。
+  · §5.6 `开始转换(&S)`（Alt+S）+ AcceptButton + KeyPreview/Esc→停止 + 显式 TabIndex。
+  · §6 设置窗 480×350 → 560×400；左侧 132px 自绘 ListBox 三分类，右侧三页共存切 Visible。
+- **两个实测坑**（已修，手册 5.13）：① 失败栏最窄 264 逻辑像素，三列最小合计
+  170+70+62=302 溢出 → 横向滚动条把「详情 ▸」滚出可视区 → 改 140+54+50=244；
+  ② 详情面板固定 132 高于失败栏约 126 → 表格压成 0 高、面板 Y=-18 溢出 →
+  高度按容器剩余 clamp。② 与 GEN-WIN-010 同族不同维度（010 管窗口 MinimumSize，此条管容器高）。
+- **验证**：主工程 0 警告 0 错误；**强制重建** SelfTest（`--no-incremental`，否则增量
+  不重编、引擎新鲜度守卫假 FAIL）→ 108/108 exit 0；反射 harness（`_测试输出/UI评审/_faildetail/`）
+  断言 AcceptButton / Esc 真实按键 / detailInView + hscroll=0 / clamp 全过；
+  主窗 + 设置窗（三分类）+ 展开详情截图复验无回归；
+  exe 重发布 md5 `7956647ea058a78b6f99e7e244b2a751`。
+- **下一步**：① 正式经验条目已写（GEN-WIN-011~014 + GEN-TEST-004，25 条）；②
+  （C1/修订六·补/C3 三批的条目都挂在这一次；C1 历史教训两件：`LB_SETCURSEL` 不驱动
+  WinForms ListBox、96 DPI 本机无法降级——.NET 4.7+ 默认 per-monitor）；
+  ③ C3 已独立 commit（未 push）；用户未明确指令前不 push。
+
+
+### 2026-10-16 09:5x：修订七（C 档 C2）—— 已验收通过、已提交 `24ddf3c`（未推送）
+
+- C2 = 卡片化分区（CardPanel）+ 三栏状态点/计数徽标（ColumnHeader）+ §5.7 设置移位
+  （客户区顶部标题条 40px，操作条 5 列 → 4 列）；窗口默认 900×760 / 最小 840×730。
+- 验证：编译 0/0；SelfTest 108/108；67 控件 0 越界 0 零尺寸；125% 与 96 DPI 双路径
+  截图复验；exe md5 `413e22a5e7728e433639a0ad978f73da`。
+- 经验沉淀：GEN-WIN-008（DisplayRectangle 复刻 GroupBox 语义）/ 009（自绘控件父链底色穿透）/
+  010（Dock 加固定高度条后复核窗口最小尺寸），lessons 20 条。
+
 
 ### 2026-10-16：修订七（C 档 C2）—— **最新，优先看这里**
 

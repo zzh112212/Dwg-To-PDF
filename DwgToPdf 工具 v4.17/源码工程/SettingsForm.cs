@@ -6,7 +6,10 @@ using System.Windows.Forms;
 
 namespace DwgToPdf.Batch;
 
-/// <summary>v4.5 设置窗口（独立 Form，3 Tab：质量审查 / 块图框 / 打印与输出）。
+/// <summary>v4.5 设置窗口（独立 Form）。
+/// v4.17 修订七（C 档·§6）：原 3 个 TabPage（质量审查 / 块图框 / 打印与输出）改为
+/// 「左 132px 分类列表 + 右内容区」左右分栏（窗口 560×400），消除 TabPage 下半部的大量留白；
+/// 说明文字色统一为 UiTheme.TextMuted(#5F5E5A)（字号沿用窗体字体 9pt = 12px，无需另设）。
 /// 启动时从 AppSettings.DefaultPath 加载，关闭/确定时保存到同一路径。
 /// 字段值通过 ResultSettings 属性传回 MainForm，MainForm 启动转换时注入到 PrintOptions。
 /// v4.5 变更：块名改为"输入框+添加按钮+列表+删除选中"逐条管理（原多行文本框因窗口
@@ -15,7 +18,11 @@ namespace DwgToPdf.Batch;
 public class SettingsForm : Form
 {
     private readonly AppSettings _original;
-    private TabControl _tab;
+    // v4.17 修订七（C 档·§6）：3 个 TabPage 改为「左分类列表 + 右内容区」左右分栏。
+    // 只切换内容面板的 Visible，控件实例始终存活（切换分类不会丢未保存的编辑值）。
+    private ListBox _lstCategories;
+    private Panel _contentHost;
+    private Panel _pageQuality, _pageBlock, _pagePrint;
     private Button _btnOk, _btnCancel, _btnReset;
 
     // Tab 1 质量审查
@@ -56,32 +63,69 @@ public class SettingsForm : Form
         MinimizeBox = false;
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterParent;
-        // v4.17：打印/输出页删掉"高质量打印已停用"一行后，窗口高度 420 → 350（去掉空白）
-        ClientSize = new Size(480, 350);
-        Font = new Font("Microsoft YaHei UI", 9F);
+        // v4.17 修订七（C 档·§6）：3 个 TabPage 下半部大量留白 → 改左右分栏
+        // （左 132px 分类列表 + 右内容区），窗口 480×350 → 560×400。
+        ClientSize = new Size(560, 400);
+        Font = UiTheme.FontBody;
+        BackColor = UiTheme.PageBackground;
 
         var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 2
+            RowCount = 2,
+            BackColor = UiTheme.PageBackground
         };
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
         Controls.Add(root);
 
-        _tab = new TabControl { Dock = DockStyle.Fill, Padding = new Point(12, 6) };
-        _tab.TabPages.Add(BuildQualityTab());
-        _tab.TabPages.Add(BuildBlockTab());
-        _tab.TabPages.Add(BuildPrintTab());
-        root.Controls.Add(_tab, 0, 0);
+        // ---------- 左右分栏：左分类列表（132px 固定宽）+ 右内容区 ----------
+        var body = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1,
+            BackColor = UiTheme.CardBackground
+        };
+        body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 132F));
+        body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        body.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+        // 分类列表底色取页面底色，与右侧白色内容区自然分界（无需额外分隔线）。
+        _lstCategories = new ListBox
+        {
+            Dock = DockStyle.Fill,
+            DrawMode = DrawMode.OwnerDrawFixed,
+            ItemHeight = 34,
+            BorderStyle = BorderStyle.None,
+            IntegralHeight = false,
+            BackColor = UiTheme.PageBackground,
+            ForeColor = UiTheme.Text,
+            Font = UiTheme.FontBody,
+            TabIndex = 0
+        };
+        _lstCategories.DrawItem += OnDrawCategory;
+        _lstCategories.SelectedIndexChanged += OnCategoryChanged;
+        body.Controls.Add(_lstCategories, 0, 0);
+
+        _contentHost = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
+        _pageQuality = BuildQualityPage();
+        _pageBlock = BuildBlockPage();
+        _pagePrint = BuildPrintPage();
+        // 三个内容面板同为 Dock=Fill：始终只显示一个（切 Visible），故互不干扰。
+        _contentHost.Controls.Add(_pageQuality);
+        _contentHost.Controls.Add(_pageBlock);
+        _contentHost.Controls.Add(_pagePrint);
+        body.Controls.Add(_contentHost, 1, 0);
+        root.Controls.Add(body, 0, 0);
 
         // 底部按钮
         var btnPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(0, 6, 12, 0)
+            Padding = new Padding(0, 8, 12, 0)
         };
         _btnOk = new Button { Text = "确定", Width = 78, Height = 28 };
         _btnCancel = new Button { Text = "取消", Width = 78, Height = 28 };
@@ -96,11 +140,44 @@ public class SettingsForm : Form
 
         AcceptButton = _btnOk;
         CancelButton = _btnCancel;
+
+        _lstCategories.Items.Add("质量审查");
+        _lstCategories.Items.Add("识别块图框");
+        _lstCategories.Items.Add("打印输出");
+        // 默认选中第一项；赋值即触发 OnCategoryChanged，一次性定好三个面板的可见性。
+        _lstCategories.SelectedIndex = 0;
     }
 
-    private TabPage BuildQualityTab()
+    /// <summary>v4.17 修订七（C 档·§6）：左侧分类列表自绘项——
+    /// 选中项 PrimaryLight(#E6F1FB) 底 + PrimaryDark(#0C447C) 字，未选中项取页面底色。</summary>
+    private void OnDrawCategory(object sender, DrawItemEventArgs e)
     {
-        var page = new TabPage("质量审查");
+        if (e.Index < 0 || e.Index >= _lstCategories.Items.Count) return;
+        bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+        Color back = selected ? UiTheme.PrimaryLight : UiTheme.PageBackground;
+        Color fore = selected ? UiTheme.PrimaryDark : UiTheme.Text;
+        using (var brush = new SolidBrush(back)) e.Graphics.FillRectangle(brush, e.Bounds);
+        Rectangle textRect = new Rectangle(e.Bounds.X + 14, e.Bounds.Y,
+            Math.Max(0, e.Bounds.Width - 14), e.Bounds.Height);
+        TextRenderer.DrawText(e.Graphics, _lstCategories.Items[e.Index].ToString(),
+            _lstCategories.Font, textRect, fore,
+            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+    }
+
+    /// <summary>v4.17 修订七（C 档·§6）：切换分类——只切内容面板可见性，控件实例保持不变。</summary>
+    private void OnCategoryChanged(object sender, EventArgs e)
+    {
+        if (_pageQuality == null || _pageBlock == null || _pagePrint == null) return;
+        int i = _lstCategories.SelectedIndex;
+        _pageQuality.Visible = (i == 0);
+        _pageBlock.Visible = (i == 1);
+        _pagePrint.Visible = (i == 2);
+        _lstCategories.Invalidate();
+    }
+
+    private Panel BuildQualityPage()
+    {
+        var page = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -136,7 +213,7 @@ public class SettingsForm : Form
             // v4.17：说明精简（用户要求：简短、正式）
             Text = "说明：PDF 小于该值即判定内容缺失。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 1);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 1), 2);
 
@@ -145,7 +222,7 @@ public class SettingsForm : Form
             // v4.17：说明精简
             Text = "另含页尺寸、内容流字节数综合判定。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 2);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 2), 2);
 
@@ -155,9 +232,9 @@ public class SettingsForm : Form
 
     /// <summary>v4.5：块名逐条管理——单行输入框回车或点"添加"入列表（回车被拦截执行添加，
     /// 不再触发窗口"确定"），列表中选中后可删除。说明文字缩短并 AutoSize 防截断。</summary>
-    private TabPage BuildBlockTab()
+    private Panel BuildBlockPage()
     {
-        var page = new TabPage("识别块图框");
+        var page = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -250,9 +327,9 @@ public class SettingsForm : Form
     ///   ① 删除"高质量打印：已停用…"整行——该功能已退役（见 PrintQuality.IsHighQuality），
     ///      留一行灰字"已停用"没有意义，用户要求不要出现；行索引整体上移，RowCount 9。
     ///   ② 说明文案统一精简为一句、正式表述（原长句在 480 宽窗口易截断）。</summary>
-    private TabPage BuildPrintTab()
+    private Panel BuildPrintPage()
     {
-        var page = new TabPage("打印/输出");
+        var page = new Panel { Dock = DockStyle.Fill, BackColor = UiTheme.CardBackground };
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -298,7 +375,7 @@ public class SettingsForm : Form
             // v4.17：说明精简
             Text = "说明：同目录输出时同名图纸自动加子目录前缀。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 1);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 1), 2);
 
@@ -322,7 +399,7 @@ public class SettingsForm : Form
             // v4.17 修订三：占位符说明（时钟精度不够时可用日期）
             Text = "可用 HH(时) mm(分) ss(秒) 与 yyyy/MM/dd(日期)；时间分隔符用全角冒号：，留空=默认 PDF-HH:mm:ss。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 3);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 3), 2);
 
@@ -349,7 +426,7 @@ public class SettingsForm : Form
             // v4.17：说明精简
             Text = "0 表示不限制；超限文件退回「待处理」栏。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 5);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 5), 2);
 
@@ -376,7 +453,7 @@ public class SettingsForm : Form
             // v4.17：说明精简（原"并发下单张正常 10~30 秒…需多轮补转"过长）
             Text = "0 表示不限制；设置过小会大量退回。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 7);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 7), 2);
 
@@ -404,7 +481,7 @@ public class SettingsForm : Form
             // v4.17：说明精简（实测依据见手册第26章）
             Text = "仅对含图片的图纸生效；改用打印通道，单张较慢。",
             Dock = DockStyle.Fill,
-            ForeColor = Color.FromArgb(90, 90, 90)
+            ForeColor = UiTheme.TextMuted
         }, 0, 9);
         layout.SetColumnSpan(layout.GetControlFromPosition(0, 9), 2);
 
