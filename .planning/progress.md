@@ -567,3 +567,18 @@
 - **关键处置**：首次 `git add` 出现 LF→CRLF 警告（全局 autocrlf=true），会改变 .py 等文件字节 → 改 `core.autocrlf=false` 后重新暂存，警告归零、索引内行尾与磁盘一致（.cs/.txt 仍 CRLF，部分 .py 仍 LF）。
 - **结果**：提交数 1、跟踪文件 197、`.git` 3.1M、**无远端**（原 origin 随 .git 一并删除）、工作区干净。
 - **旧历史去向**：仅存于工作区根 `Dwg-To-PDF-历史备份-20261019.bundle`（仓库外，2.1M）。本文与 handoff 中出现的旧哈希（`3f5c6ce` / `36cc08d` / `d87c22c` / `9903599` 等）在新仓库中已不存在。
+
+
+## 会话三十（2026-10-19 12:5x）：远端仓库替换为当前干净仓库
+
+- 用户要求「把 GitHub 上面那个删了，推现在的」。
+- **探测**：`gh` 未安装；`GH_TOKEN`/`GITHUB_TOKEN` 空；`git credential fill` 返回空 username + `password=NO`
+  → 本机无删除仓库的能力（需 `delete_repo` 权限）。远端原状 `main`=3f5c6ce、`ui-optimization`=c1ed5fe。
+- **用户裁决**：强推覆盖（三选项中的推荐项），不删库重建、不传 token。
+- **执行**：`git remote add origin ssh://git@ssh.github.com:443/zzh112212/Dwg-To-PDF.git`；
+  `git config core.sshCommand "ssh -i ~/.ssh/id_ed25519_dwgtopdf -o IdentitiesOnly=yes"`；
+  `git push --force origin main`（`+ 3f5c6ce...40cfff6 main -> main (forced update)`）；
+  `git push origin --delete ui-optimization`（`- [deleted]`）；`git branch --set-upstream-to=origin/main main`。
+- **终态**：远端仅 `refs/heads/main` = `40cfff6`，与本地一致；`git status -sb` = `## main...origin/main` 无差异；
+  API `size` 2843 KB、`pushed_at` 2026-10-19T04:49:38Z、`default_branch` = main。
+- **副作用**：远端旧历史不可达，唯一副本为工作区根 `Dwg-To-PDF-历史备份-20261019.bundle`。

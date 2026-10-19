@@ -153,3 +153,18 @@
 - 新仓库 `core.autocrlf=false`（保留文件原始行尾），**未配置远端**（原 origin 随 `.git` 一并删除）。
 - 想回看旧历史：`git clone Dwg-To-PDF-历史备份-20261019.bundle <目标目录>`。
 - **恢复指引**：读本节 → `progress.md`「会话二十九」→ 若要动代码，按工作区根 `目录结构说明.txt` 第五节编译/回归。
+
+
+## 交接态（2026-10-19 12:5x：远端已替换为当前仓库）
+- 远端 `zzh112212/Dwg-To-PDF` 已**强推覆盖**：`main` 由旧 `3f5c6ce` 换成 `40cfff6`（新仓库唯一提交）；
+  远端遗留分支 `ui-optimization`（旧 `c1ed5fe`）已删除 → 远端现只有 `main` 一个分支。
+- **没有"删库重建"**：本机无 `gh` CLI、`GH_TOKEN`/`GITHUB_TOKEN` 为空、`git credential fill` 取不到 token，
+  删库需 `delete_repo` 权限（网页或 token）。已向用户说明三条路径，用户选择「强推覆盖」——效果等价
+  （远端内容 = 当前干净仓库），代价是保留仓库外壳（URL / 仓库 ID）。
+- 本地配置已补齐：`origin` = `ssh://git@ssh.github.com:443/zzh112212/Dwg-To-PDF.git`；
+  `core.sshCommand` = `ssh -i ~/.ssh/id_ed25519_dwgtopdf -o IdentitiesOnly=yes`；`main` 已设上游 `origin/main`。
+- 核验：`git ls-remote --heads origin` 仅 `40cfff67ca86f602b98e28caa33f06a9e2030eb1 refs/heads/main`；
+  本地 `HEAD` 与 `origin/main` 同一哈希；API `size` 2843 KB、`default_branch` = `main`、
+  `pushed_at` 2026-10-19T04:49:38Z。
+- **注意**：远端旧历史已不可达，唯一副本是工作区根 `Dwg-To-PDF-历史备份-20261019.bundle`。
+- **恢复指引**：读本节 → `progress.md`「会话三十」→ 任务仍处「等待用户提下一版本优化计划」的暂停态。
