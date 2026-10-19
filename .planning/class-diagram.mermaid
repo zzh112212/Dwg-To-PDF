@@ -1,0 +1,39 @@
+classDiagram
+    class BgLogger {
+        -static object Lock
+        -static string _path
+        +static void Line(string level, string msg)
+        +static void Info(string m)
+        +static void Warn(string m)
+        +static void Error(string m)
+        +static void LogStartup()
+        +static void LogShutdown()
+        +static void LogRunStart(string input, string output, bool tight, bool includeSub)
+        +static void LogRunEnd(DateTime start, int ok, int fail, int cancel, bool cancelled)
+        +static void LogFile(string file, string status, string reason)
+        +static string DetectEnvironment()
+        -static string EnsureFile()
+        -static string ScanAutoCadRegistry()
+    }
+    class CatchCommentBatch {
+        <<B1 注释批>>
+        +int sites = 111
+        +int multilineCompress = 8
+        +int xmlDoc = 10
+        +bool executableChanged = false
+    }
+    class EmptyCatchScanner {
+        <<.planning script>>
+        +scan(scope) list
+        +check() TOTAL=140, B1_TODO=0
+    }
+    class CadConverter {
+        <<注释风格参照源>>
+    }
+    class UiTheme {
+        <<XML doc 风格参照源>>
+    }
+    BgLogger ..> CatchCommentBatch : CQ-03 压行8处 + CQ-04 XML doc 10个
+    CatchCommentBatch ..> CadConverter : 措辞沿用（幂等/best-effort）
+    CatchCommentBatch ..> UiTheme : summary 写法参照
+    EmptyCatchScanner ..> CatchCommentBatch : 产出并复核清单

@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant E as Engineer
+    participant S as 空catch清单.py
+    participant G as git
+    participant D as dotnet SDK 8.0.424
+    participant T as SelfTest.exe
+    E->>S: --scope v417-src --check
+    S-->>E: TOTAL=140 / B1_TODO=111（T1 冻结清单）
+    loop 每个源文件（自底向上，行号大→小）
+        E->>E: 按模板补一行注释 / 多行式压成 catch { }
+    end
+    E->>S: --check 复扫
+    S-->>E: TOTAL=140 / B1_TODO=0（先 TOTAL 后 TODO）
+    E->>G: git diff --name-only（仅允许白名单路径）
+    E->>G: token 等价校验（HEAD vs 工作区：剥注释+压空白）
+    G-->>E: 逐文件 PASS
+    E->>D: build 源码工程/DwgToPdf.csproj -c Release
+    D-->>E: 0 警告 0 错误
+    E->>D: build 自测试工程/SelfTest.csproj -c Release --no-incremental
+    D->>T: 运行（输出按 GBK 解码）
+    T-->>E: 108/108
+    E->>G: commit v4.17 修订九：B1 注释批（只提交，不推送）

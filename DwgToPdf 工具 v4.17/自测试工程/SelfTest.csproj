@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>SelfTest</AssemblyName>
+    <RootNamespace>DwgToPdf.SelfTest</RootNamespace>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <!-- 复用 v3.0 源码（提速重构对象）：全部文件已落地，直接引用源码编译 -->
+    <Compile Include="..\源码工程\PageSpec.cs" Link="src\PageSpec.cs" />
+    <Compile Include="..\源码工程\FrameCache.cs" Link="src\FrameCache.cs" />
+    <Compile Include="..\源码工程\CoreConsoleLocator.cs" Link="src\CoreConsoleLocator.cs" />
+    <Compile Include="..\源码工程\FrameExtractor.cs" Link="src\FrameExtractor.cs" />
+    <Compile Include="..\源码工程\PlotSession.cs" Link="src\PlotSession.cs" />
+    <!-- Task 8: 直编 ConverterEngine 及其依赖，使 e2e/fallback 可实例化引擎 -->
+    <Compile Include="..\源码工程\ConverterEngine.cs" Link="src\ConverterEngine.cs" />
+    <Compile Include="..\源码工程\ConverterEngine.Plot.cs" Link="src\ConverterEngine.Plot.cs" />
+    <Compile Include="..\源码工程\PageSetupPreprocessor.cs" Link="src\PageSetupPreprocessor.cs" />
+    <Compile Include="..\源码工程\CadConverter.cs" Link="src\CadConverter.cs" />
+    <Compile Include="..\源码工程\CadResult.cs" Link="src\CadResult.cs" />
+    <Compile Include="..\源码工程\ComStarter.cs" Link="src\ComStarter.cs" />
+    <Compile Include="..\源码工程\Late.cs" Link="src\Late.cs" />
+    <Compile Include="..\源码工程\LogWriter.cs" Link="src\LogWriter.cs" />
+    <Compile Include="..\源码工程\OleMsgFilter.cs" Link="src\OleMsgFilter.cs" />
+    <Compile Include="..\源码工程\ProgressUpdate.cs" Link="src\ProgressUpdate.cs" />
+    <Compile Include="..\源码工程\ItemStatus.cs" Link="src\ItemStatus.cs" />
+    <Compile Include="..\源码工程\PrintOptions.cs" Link="src\PrintOptions.cs" />
+    <Compile Include="..\源码工程\EnvironmentSelfCheck.cs" Link="src\EnvironmentSelfCheck.cs" />
+    <Compile Include="..\源码工程\BgLogger.cs" Link="src\BgLogger.cs" />
+    <!-- v3.1 新增 -->
+    <Compile Include="..\源码工程\ConvertProfile.cs" Link="src\ConvertProfile.cs" />
+    <Compile Include="..\源码工程\PrintQuality.cs" Link="src\PrintQuality.cs" />
+    <!-- v4.15：高清打印配置（pc3）工厂（含图片图纸走 COM 高清出图） -->
+    <Compile Include="..\源码工程\RasterPlotterFactory.cs" Link="src\RasterPlotterFactory.cs" />
+    <Compile Include="..\源码工程\FrameTemplateLibrary.cs" Link="src\FrameTemplateLibrary.cs" />
+    <Compile Include="..\源码工程\Concurrency.cs" Link="src\Concurrency.cs" />
+    <!-- v4.3：质量审查多元化（PDF 页尺寸+内容流+文件大小综合） -->
+    <Compile Include="..\源码工程\PdfContentCheck.cs" Link="src\PdfContentCheck.cs" />
+    <!-- v4.5：失败原因分类（仅日志摘要，CSV 报告已移除） -->
+    <Compile Include="..\源码工程\ConvertReport.cs" Link="src\ConvertReport.cs" />
+  <Compile Include="..\源码工程\RunHistory.cs" Link="src\RunHistory.cs" />
+  <Compile Include="..\源码工程\RunPolicy.cs" Link="src\RunPolicy.cs" />
+  <Compile Include="..\源码工程\LogFollowPolicy.cs" Link="src\LogFollowPolicy.cs" />
+    <!-- v4.8：用户设置（AppSettings.FormatBytes 用于大文件跳过日志） -->
+    <Compile Include="..\源码工程\AppSettings.cs" Link="src\AppSettings.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\源码工程\extframe.lsp" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\源码工程\extframe_company.lsp" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

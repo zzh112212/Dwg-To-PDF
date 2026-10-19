@@ -1,0 +1,263 @@
+﻿================================================================
+  DWG 批量转 PDF 工具 —— 版本变更记录（专门文件）
+================================================================
+用途：逐版本记录每一次交付/回退/关键版本决策，一处查全览。
+关系：各版本目录内的 说明.txt / 运行说明.txt = 详细说明；本文件 = 版本总账。
+维护：每次交付或版本决策当日追加（项目规则七.2）。
+
+----------------------------------------------------------------
+一、版本总表
+----------------------------------------------------------------
+|版本 | 日期 | 性质 | 一句话 | 状态 |
+| v3.7~v4.12 | 09-02~09-12 | 迭代 | 基础能力：图框识别/选纸/出图/并发/UI（手册第1~25章） | 历史 |
+| v4.12 修订 | 09-13 | 修订 | 第25章补充 | 历史 |
+| v4.14 | 09-13~14 | 迭代 | PISCES “打印发浅”定位（第25章十~十三） | 历史 |
+| v4.15 | 09-15（+09-16~17 修订） | 交付 | 发浅排查（第26章） | 冻结（已移出工作区） |
+| v4.16 | 10-07 | 交付 | 选纸 3% 容差 / PlotWithLineweights / 组码 70的 0x80 位 / OLE 光栅假说（后被组码 76 推翻） / 停用 HQ（第27~29章） | v4.17 的回滚基线 |
+| v4.17 修订一 | 10-14 | 修订 | 识别提速 10.5% / 质量审查 5维 / 输出目录自动清理 / UI 精简（第30章） | 已交付 |
+| v4.17 修订二 | 10-15 | 修订 | UCS 复位世界坐标系：修复问题图纸 557 27MY-Y17369xx 三张错位/裁剪根因（第31章） | 已交付 |
+| v4.17 修订三 | 10-15 | 修订 | 已成功图纸默认跳过 / PDF 子文件夹改时间戳名（默认 PDF-HH:mm:ss，全角冒号，同名 -2）/ UCS 条件复位（第32章） | 已交付 + 验收通过 |
+| v4.17 修订四 | 10-15 | 修订 | 界面优化 B 档：修"自动滚动"开关失效（实测 108×3px）/ 6 处像素错位/ 信息层级重组 / 阶段色正名（纯 UI，不改功能） | 已交付 + 验收通过 |
+| v4.17 修订五 | 10-15 | 修订 | 回归修复：选项区第二行（显示线宽/质量核查/识别块图框）被顶出分组、整行不可见 → 改「单栅格 + 行 2 跨 6 列流式容器」（手册 5.10） | 已交付 |
+| v4.17 修订六 | 10-15 | 修订 | 界面优化 C 档·第一批 C1：设计令牌 UiTheme + 自绘扁平进度条（带百分比）/ 阶段条改胶囊（五态）/ 按钮两级层级（纯 UI，不改功能；手册 5.11） | 待验收 |
+| v4.17 修订六·补 | 10-15 | 修订 | C1 验收驳回修复：进度条恢复系统级"流动"缓动（ease-out cubic，15ms 帧、140~420ms；百分比数字仍显示真实值） | 待验收 |
+| v4.17 修订七 | 10-16 | 修订 | 界面优化 C 档·第二批 C2：卡片式分区（CardPanel）/ 三栏状态点 + 计数徽标（ColumnHeader）/ "设置…"移到顶部标题条 / 窗口默认 900×760（纯 UI，不改功能；手册 5.12） | 待验收 |
+| v4.17 修订八 | 10-16 | 修订 | 界面优化 C 档·第三批 C3（收尾）：失败原因内联展开（§5.5，note 截断摘要 + 「详情 ▸」链接列 + 只读详情面板，0 弹窗）/ 键盘可达性（§5.6，&S + 回车 + Esc / 显式 TabIndex）/ 设置页三分类左右分栏（§6，560×400，「界面」分类不做）（纯 UI，不改功能；手册 5.13） | 已交付 + 验收通过 |
+| v4.17 修订十 | 10-16 | 修订 | 代码质量 B2 异常可见化批：CQ-01 后台识别异常真实化（catch 分流 + RecognitionFailureNote 透传块失败清单）/ CQ-02 日志写盘失败可见化（三属性 + 首败 BgLogger 镜像 + 收尾警告行上界面）/ CQ-05 帧提取 4 处 BgLogger.Warn / CQ-06 六类静默点补注释（8 文件 +166/-17；编译 0/0、SelfTest 115/115；成功路径零变化） | 已提交待验收 |
+| v4.17 修订十·补 | 10-16 | 修订 | B2-R1 修复轮：CQ-06 B-4 设置保存失败可见化三处联动（AppSettings.Save 记日志回 false + MainForm 状态栏 + SettingsForm 保存失败留窗报错，原 dialog 撒谎） / CQ-02 日志造期失败降级仅内存模式不阻塞转换（编译 0/0、SelfTest 120/120、B-4 与 P2 真机复现通过；发布 exe 重建 md5 2e8ce7f18577f7673b778c90e9866213） | 已提交待验收 |
+| v4.17 修订十一 | 10-16 | 修订 | 代码质量 B3 整洁项批（CQ-07）：看门狗 15s 轮询改 ManualResetEventSlim 事件等待，停止响应真机 A/B 3.1s → 约 0.1s（中位 69ms）；判定体（阈值 / 冷却 / 判定表达式 / 告警两行 / 解除阻塞调用）逐字不变（编译 0/0、SelfTest 120/120） | 已提交待验收 |
+| v4.17 修订十一·补 | 10-16 | 修订 | B3-R1 修复轮：看门狗停止段 Dispose 加 Join 返回值守卫（`bool wdJoined = false;` + `wdJoined = watchdogThread.Join(3000)` + `if (wdJoined && stopEvent != null) stopEvent.Dispose();`）——防御性；P3 复核后确认原机制不成立（真机实测：ManualResetEventSlim 的 IsSet 在 Dispose 后不抛、仅 Wait 抛；原“回读 IsSet 崩溃”为假阳性），保留修复（编译 0/0、SelfTest 120/120、回归 tail 68.5/75.3ms 无退化） | 已提交待验收 |
+| v4.17 修订十二 | 10-16 | 修订 | 代码质量 B4 结构批（CQ-08 首批）：MainForm 设置/持久化（4 方法）+ 拖放与文件收集（8 方法）两块 partial 原样搬迁，2103→1863 行；方法体逐字不变（唯一例外 LoadAppSettings 注释/签名 2 层→1 层缩进修正）；8 处调用点零改动；两工程文件未改（编译 0/0、SelfTest 120/120） | 已提交待验收 |
+| v4.17 修订十三 | 10-16 | 修订 | 代码质量 B5 结构批（CQ-08 第二批）：MainForm 界面构建 BuildUi() 665 行 partial 原样搬迁（1863→1197 行，达成 CQ-08 ≤1400 验收线）；唯一例外 BuildUi 声明行缩进修正（顶格→1 tab，D2）；1 处调用点零改动；MainForm.cs 9 条 using 一条未动（纯删除）（编译 0/0、SelfTest 120/120） | 已提交待验收 |
+| v4.17 修订十四 | 10-16 | 修订 | 代码质量 B6 注释批（CQ-09）：7 文件方法/属性 XML doc 覆盖率 45/78 → 78/78 = 100%（补 33 处，纯注释新增、删除行 0、新增行全为 ///）；字段与类级不加 doc（D3/D4）；验收口径经用户裁决改按覆盖率（弃用「计数 ≥50%」）（编译 0/0 含 CS1570=0、SelfTest 120/120） | 已提交待验收 |
+| v4.17 修订十四·补二 | 10-16 | 格式 | 格式债清理：版本变更记录.txt 双 BOM → 单 BOM（-3 字节）+ MainForm.cs L187 四空格缩进 → tab（1 行）；纯空白/编码，零行为影响；发布 exe 补刷（dead4f3d）；只提交未推送。 |
+| v4.17 修订十四·补三 | 10-19 | 注释 | B6·补（QA 补验后裁决）：补齐 RunCore/MarkAllCancelled/BuildGrid 3 处私有方法 doc，方法/属性 doc 覆盖率全口径 97/97=100%（原分母 78 系设计期漏计）；发布 exe 补刷（58944ddd）；只提交未推送。 |
+| v4.17 修订十五 | 10-19 | 清理 | HQ 阈值链路彻底删除：PrintQuality 的 IsHighQuality/PlotterFor/MapMedia/ThresholdBytes/HighQualityPlotterName、PrintOptions 与 AppSettings 的 HighQualityThresholdBytes（含 settings.json 键，顺带修掉 ToJson 重复写键缺陷）、PageSetupPreprocessor 透传、ConverterEngine 的 hqStat 计数链、MainForm 注入；SelfTest 删 5 条旧 API 断言 + 删 --probe-hq-media 探针、补 2 条（JSON 无该键 / 相邻字段未误删）。行为零变化：设备恒 DWG TO PDF.pc3。编译 0/0、SelfTest 117/117（基线 120，删 5 补 2）、E2E 115 张 113 成功 2 失败（H77 既有）；发布 exe 补刷（7c108f7e）。 | 待验收 |
+
+----------------------------------------------------------------
+二、关键版本决策（含理由）
+----------------------------------------------------------------
+D1  10-07：v4.16 转正式交付版，v4.15 冻结为回滚基线。
+D2  10-14：v4.17 开发（基于 v4.16），v4.16 接任回滚基线；v4.15 目录从工作区移除
+    （无日志记录；判据=仓库父目录 mtime 定格 10-14 17:59，正好是建 v4.17 那次会话）。
+D3  10-15 13:09：**用户明确“本轮的改动不升版本，还是 v4.17”**。修订三作为
+    “v4.17 修订三”交付；此前误升的 v4.18（Version 常量 + 93 处标注）已全批回退。
+D4  版本号管理教训：升版是显式决策，未经用户同意不得改 Program.Version。
+D5  10-15：界面优化按用户选定"B 档"执行（A 保守修复 + 一致性优化），**不升版本号**；
+    纯 UI 改动（MainForm / MainForm.PhaseLog / SettingsForm），不动引擎与领域规则。
+D6  10-15：修订四"选项区两行拆成嵌套 TableLayoutPanel"经复测判定为**回归**（行 2 整行不可见），
+    修订五**回退嵌套、改单 6 列栅格 + 行 2 跨 6 列 FlowLayoutPanel**；口径仍记作"v4.17 修订五"，
+    **不升版本号**。教训：AutoSize 行内不得放 Dock=Fill 子容器（手册 5.10）。
+D7  10-15：界面优化第二轮按用户选定 **C 档** 执行（先出设计稿、用户审批通过后再动手）；
+    C1/C2/C3 三批，每批一个 git commit、可单独 revert；分支 `ui-optimization`
+    （`main` 保持修订四/五稳定基线）。**仍不升版本号**，口径记作"v4.17 修订六/七/八"。
+D8  10-16：C3 范围最终口径 = §5.5 失败原因内联展开 + §5.6 键盘可达性 + §6 设置页
+    左右分栏；**§6「界面」分类不做**（用户当日拍板），只保留三分类、不新增设置项。
+    两处"数字陷阱"记入手册 5.13：① DataGridView 新增列必须复核该栏最小宽度
+    （Fill 列先被挤到 MinimumWidth；三列最小合计 > 容器宽 → 横向滚动条把链接列
+    滚出可视区）；② Dock 布局加固定高度条要同时复核"容器自己的高"——固定条高于
+    容器时不会自动收缩，把相邻 Fill 控件压成 0 高、自身溢出（与 GEN-WIN-010
+    同族不同维度：010 管窗口 MinimumSize，此条管容器高）。
+
+----------------------------------------------------------------
+三、今日关键事件（2026-10-15）
+----------------------------------------------------------------
+13:09  用户否决误升的 v4.18 → 回退为 v4.17（93 处标注改口径）。
+13:15  重建主工程 + 自测工程（0 警告 0 错误）；SelfTest 108/108 PASS；exe 重新发布。
+13:38  git 提交 8974e8f（v4.17 修订一~三全量入库 + v4.15 删除）并推送。
+13:5x  用户确认修订三实测验收“通过”。
+13:57  经验文件 experiences/lessons.md 落盘（11 条正式条目，dev-lessons 流程）。
+14:05  完整经验手册全文合并进 lessons.md（末附形式，供后续 ima 单文件上传）。
+16:2x  用户要求"评审现有 UI 设计并提出优化方案"→ 实机取证（截图 + 控件树 dump）。
+17:1x  用户选定 B 档、明确不升版本 → 落地 1 处 P0 + 6 处 P1 + 5 项一致性优化。
+17:3x  编译 0 警告 0 错误；SelfTest 108/108 PASS；控件树复测逐项达标；发布目录 exe 刷新。
+17:5x  用户弹窗验收「通过」→ 经验库新增 3 条正式条目（GEN-WIN-005/006、GEN-TEST-003），
+       条目 13 → 16 条，check/toc 通过。
+17:5x+ 第二轮 UI 优化启动前的复核发现**回归**：修订四把选项区两行拆成嵌套 TableLayoutPanel，
+       子表 Dock=Fill 落在 AutoSize 行内被撑到 100 逻辑像素高，行 2（显示线宽/质量核查/识别块图框）
+       被顶到分组外、整行不可见（控件树实测 y=327，而"选项"分组只到 y=279）。
+       → 修订五修复（单 6 列栅格 + 行 2 跨 6 列 FlowLayoutPanel）。
+       控件树复测：行 2 回到 y=240（组内可见）；保留"配色：贴合下拉框（100px→3px）"
+       与"行 1/行 2 左缘均 x=22"两项改进；与修复前逐行 diff 除选项区外**完全一致**。
+       编译 0 警告 0 错误；SelfTest 108/108 PASS。
+18:0x  用户「审批通过」C 档设计稿 → 建分支 `ui-optimization`（main=修订四基线）
+       → C1 落地：新增 UiTheme/FlatProgressBar/PhaseChipBar，改 MainForm 阶段条·双进度条·
+       按钮层级·颜色字体令牌。编译 0 警告 0 错误；SelfTest 108/108 PASS。
+       控件树逐行 diff：仅阶段条 5 个 Label 消失（换 1 个自绘控件），其余完全一致。
+       建组件预览工程（反射注入状态）取证胶囊五态与进度条 0/37/100%；
+       96 DPI 路径用「拷到无 .exe.config 目录运行」验证（3.30% 像素差=纯拉伸模糊）。
+       `--dirp` 40 张两轮各 40/40 成功、0 失败；发现既有断言缺陷（-2 目录非空
+       用不递归的 GetFiles，输入含子目录时必然假失败），已记录待用户决定是否修。
+18:3x  用户**驳回 C1 验收**：「进度条不是流动状态，而是突然变化。分支前的就是流动的。」
+       → 定位为"自绘替换系统控件时弄丢了 msctls_progress32 自带的位置过渡动画"。
+       → `FlatProgressBar` 加 `_displayValue` + 15ms UI Timer + ease-out cubic（140~420ms），
+       百分比数字仍显示目标值。编译 0 警告 0 错误；SelfTest 108/108 PASS；exe 重发布 md5 一致。
+       逐帧像素采样证实 0→100% 25 帧滑完、每帧 ≤15px，无单帧跳变（手册 5.11 纪律④）。
+       同期排查"一次性探针工程读常量数组为垃圾值"：临时在 `Program.Main` 挂诊断，
+       **在主程序与自测进程内实测常量数组全部正确**，确认仅影响临时探针、产品无影响
+       （删诊断重建后 exe md5 复原一致；详见手册 5.11 环境观察）。
+       用户同时拍板：`--dirp` 断言缺陷**修**（加递归），修完继续 C2。
+
+----------------------------------------------------------------
+三·续、关键事件（2026-10-16）
+----------------------------------------------------------------
+09:1x  用户拍板 `--dirp` 断言缺陷**修**（`Directory.GetFiles` 加 `SearchOption.AllDirectories`）。
+      `自测试工程\Program.cs` 三处非递归 GetFiles 统一改递归；重建 SelfTest → 108/108 PASS。
+      commit 3008bd7（独立小提交，可单独 revert）；同步 `自测试工程\说明.txt`。
+09:1x  进入 C2 前先与用户对齐两处口径：
+      ① C2 范围**按设计稿 §7 表**（卡片化 + 三栏状态点/徽标 + §5.7 设置移位）；
+         §5.5 失败详情面板 / §5.6 键盘可达性 / §6 设置窗口分栏 → 留 C3；
+      ② §5.7 采用**"新建客户区顶部标题条"**方案（WinForms 原生标题栏放不了按钮）。
+09:2x  C2 落地：新增 `CardPanel.cs`（自绘卡片容器，重写 DisplayRectangle 复刻 GroupBox 语义）
+      与 `ColumnHeader.cs`（栏标题：状态圆点 + 计数徽标）；3 个 GroupBox 卡片化；
+      列表/日志降级为 Subtle 卡片；"设置…"移到顶部标题条（操作条 5 列 → 4 列）。
+      编译 0 警告 0 错误；SelfTest 108/108 PASS；exe 重发布 md5 `413e22a5e7728e433639a0ad978f73da`。
+09:2x  实测发现"加一条顶部标题条 + 4 个卡片间隙后，原最小窗口 800×660 装不下 →
+      日志卡片被整个挤出可视区"（控件树能 dump 到、截图里没有），
+      已同步放大默认/最小尺寸为 900×760 / 840×730（手册 5.12 陷阱②）。
+09:3x  控件树 dump 体检（67 控件）：零尺寸 0 项、越界 0 项；125% 与 96 DPI 双路径截图复验，
+      顶部所有卡片逐像素一致，Fill 区仅因窗口高度差 20px 不同，无裁切/重叠。
+13:5x  推送 main **成功**（ssh://git@ssh.github.com:443 通道：3f2ddd7..de9d5f9，10 提交全上）；
+       存档分支 ui-optimization（c1ed5fe）一并推送。本地 main / origin/main / GitHub 侧 main
+       三方一致（de9d5f9），工作区干净。
+       12:3x 连续失败的真因并非代理瞬时故障：本机网络**域名级封锁 github.com:443**
+       （WorkBuddy 沙箱出口 127.0.0.1:62808 CONNECT 502 / 沙箱外直连 SYN 超时，双重实测），
+       而 api.github.com 200、codeload.github.com 301、ssh.github.com:443、github.com:22 全通
+       → 走 SSH over 443：本机 ed25519 推送密钥 ~/.ssh/id_ed25519_dwgtopdf + 仓库级 deploy key
+       （id 166625055，可写）+ GitHub 官方 ed25519 主机指纹核对
+       （SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU）后写 known_hosts；
+       origin remote 改为 ssh://git@ssh.github.com:443/zzh112212/Dwg-To-PDF.git（https 本机不可用，可逆）。
+       顺带根治 GCM「CredentialHelperSelector」弹窗（用户截图提问）：credentialStore 从未设置
+       → 每次用凭据都弹选择器；已 git config --global credential.credentialStore manager。
+11:1x  用户弹窗验收 C3「通过」→ 经验库新增 5 条正式条目（20 → 25：GEN-WIN-011 新增列最小宽合计 / 012 固定高度条高于容器不收缩 / 013 SelfTest --no-incremental / 014 本机 .NET 4.7+ 无法降 96 DPI；GEN-TEST-004 私有窗体反射 harness），check/toc 通过。
+10:3x  C3 落地（收尾批）：失败原因内联展开（note 截断摘要 32 字 +「详情 ▸」链接列 +
+       Dock=Bottom 只读面板 = 完整原因 + 日志尾部 20 行，不弹窗）、键盘可达性
+       （&S / AcceptButton / KeyPreview+Esc / 显式 TabIndex）、设置页三分类左右分栏
+       （560×400，左 132px 自绘 ListBox，右侧三页共存切 Visible）。
+       实测修复两处布局陷阱（手册 5.13）：① 失败栏最窄 264 逻辑像素，
+       170+70+62=302 出横向滚动，「详情 ▸」被滚出可视区 → 三列改 140+54+50=244；
+       ② 详情面板固定 132 高于失败栏约 126，把表格压成 0 高、面板 Y=-18 溢出 →
+       改为按容器剩余高度 clamp（最低 44px）。
+       验证：主工程 0/0；强制重建 SelfTest 108/108 exit 0；反射 harness 断言
+       AcceptButton / Esc 真实按键 / detailInView / hscroll=0 / clamp 全过；
+       主窗 + 设置窗（三分类）+ 展开详情截图复验无回归；exe md5
+       `7956647ea058a78b6f99e7e244b2a751`。
+16:0x  B2 实施（T1~T6，v4.17 修订十）：T1 LogWriter 失败三属性 + 三处 catch 置标志 +
+       首次失败 BgLogger.Error 镜像；T2 CQ-01 catch 分流（取消 vs 异常）+
+       RecognitionFailureNote 纯助手 + ValidateChunkPipeline 可选参数透传；
+       T3 引擎收尾 WriteFailed [警告] 行（走 onLine → 界面日志面板可见）；
+       T4 FrameExtractor 426/568/427/569 补 BgLogger.Warn；T5 CQ-06 六类静默点
+       （MainForm 粘贴/设置保存、RunHistory 读/写注释+Warn、ConverterEngine envelope
+       四处注释、EnvironmentSelfCheck 注释、BgLogger chicken-egg 注释）。
+       编译 0 警告 0 错误；--no-incremental 重建 SelfTest → 115/115 PASS（108 存量 +
+       N1~N6 七条新增定向断言，退出码 0）；文档四件套同步（手册 5.14 / 说明第二十节 /
+       运行说明第二十一节 / 本文件修订十行）。
+       偏离设计 2 处（已记录）：① ValidateChunkPipeline 设计标注两处调用点实为一处
+       （设计行号为 B1 前值，B1 注释平移后另一处已不存在）；② missing 图纸无逐文件
+       Reason 登记，真实原因附在块失败清单日志行。
+16:4x  B2-R1 修复轮（QA 复验派回的 P1 + 同批 P2，v4.17 修订十·补）：
+       P1 AppSettings.Save() 静默 catch 致 dialog 撒谎 → 三处联动修复
+       （Save catch 记 BgLogger.Warn 回 false / MainForm 状态栏如实提示 /
+       SettingsForm 保存失败弹错误框留窗）；
+       P2 LogWriter 造期失败（DWGTOPDF_LOG_DIR 指向已存在文件）直接崩 →
+       构造整体包 try + 降级仅内存模式（_w=null、WriteFailCount=1、
+       LastWriteError 带"构造期："前缀、BgLogger.Error 镜像），转换不中断，
+       收尾 WriteFailed 警告行经 onLine 上界面。
+       验证：编译 0/0；--no-incremental 重建 SelfTest → 120/120 PASS（N7×3 + N8/N8b
+       五条新增，退出码 0）；B-4 真机复现（settings.json 只读 → 弹框留窗 +
+       BgLogger 命中 + 解锁后正常保存）；P2 真机复现（2 张图小批量不崩、2/2 出图、
+       界面日志与 BgLogger 双命中）；发布 exe 重建刷新（md5 2e8ce7f18577f7673b778c90e9866213，旧 7956647ea058a78b6f99e7e244b2a751）。
+       截图与复现脚本存 _测试输出\UI评审\qa_b2_r1\。
+17:1x  B3 整洁项批（CQ-07 看门狗事件等待，v4.17 修订十一）：设计主理人执笔（架构师平台 429 限流未落盘，并含坐标勘误：真实站点 L531/L579/L586-589/L1226-1228，停止点仅 1 处）。实施：bool[] watchdogStop → ManualResetEventSlim stopEvent；Sleep(15000) 轮询 → Wait(15000) 事件等待；停止段 Set → Join → Dispose（顺序硬约束）。
+       验证：编译 0/0；--no-incremental 重建 SelfTest → 120/120 PASS（退出码 0，未新增断言）；V1 判定语义 grep 逐字比对一致（10 行全等、无 watchdogStop 残留）；
+       V2 真机 A/B（3 张图小批量，tail=日志末行→界面已停止）：改前 2e8ce7f exe ≈3061ms（n=2）→ 改后 ≈142ms 均值/中位 69ms（n=7），差值约 2.9s 即被消除的 Join(3000) 超时；发布 exe 重建刷新（md5 8520f34112f70ab3d9b389a5cfb84146）。
+       复现脚本与日志：_测试输出\UI评审\qa_b3\。
+17:2x  B3-R1 修复轮（v4.17 修订十一·补，P3 防御性修复）：QA 复验读码指出停止段无条件
+       Dispose 存在理论崩溃路径 → 利用 Join 返回值加守卫（bool wdJoined=false +
+       wdJoined=watchdogThread.Join(3000) + if(wdJoined && stopEvent!=null) Dispose），
+       仅线程确已退出才释放，Join 超时交 GC 兜底。
+       B3-R2 复核更正：QA 真机实测（PowerShell 5.1 / CLR 4.0.30319.42000）推翻机制前提——
+       Dispose 后 Wait() 抛 ObjectDisposedException，但 IsSet 纯字段读不抛、Dispose 不重置
+       set 标志位、Set() 不抛，故“回读 IsSet 崩溃”为假阳性；唯一残余窗口需线程在 Set
+       前读 IsSet=false 且未进 Wait 时被抢占、停摆 >3s，实际不可达。修复定性为“防御性最佳
+       实践”，无害无退化，保留。
+       验证：编译 0/0；--no-incremental 重建 SelfTest → 120/120 PASS（退出码 0）；回归 tail
+       68.5/75.3ms（与修订十一 66/69ms 同档）；发布 exe 重建刷新（md5
+       22fad1523ea81bb7ccebdaa2bfa71450，旧 8520f34112f70ab3d9b389a5cfb84146）。
+       截图与脚本：_测试输出\UI评审\qa_b3\。
+18:3x  B4 结构批（CQ-08 首批，v4.17 修订十二）：MainForm.cs 2103→1863 行，拆出
+       MainForm.Settings.cs（LoadAppSettings/ApplyUiState/SaveUiState/OpenSettings）+
+       MainForm.FileCollection.cs（OnDragEnter/OnDragDrop/PasteFromClipboard/AddFilesDialog/
+       AddFolderDialog/AddFiles/AddToBatch/ClearList），12 方法逐字原样搬迁（纯移动，不改逻辑）；
+       唯一例外 = LoadAppSettings 注释+签名 2 层→1 层缩进修正（用户裁决，设计 D2）。
+       验证：编译 0/0；--no-incremental 重建 SelfTest → 120/120 PASS（退出码 0，未新增断言）；
+       纯搬迁逐字比对 12/12；8 处调用点逐行一致；两工程文件未改（SDK 通配符 / 白名单不含 MainForm）。
+       注：拆分后补两条必要 using（Settings.cs +System.IO、FileCollection.cs +System.Linq）——
+       设计 §5 漏列（搬迁前用「原文件 using − 新文件 using」核对即可发现）。
+       本批为纯结构搬迁，不重建发布 exe（无 IL 变化）。
+18:4x  B5 结构批（CQ-08 第二批，v4.17 修订十三）：MainForm.cs 1863→1197 行（达成 CQ-08
+       ≤1400 验收线），拆出 MainForm.BuildUi.cs（BuildUi() 665 行，最大单一方法）；纯移动、
+       逐字搬迁；唯一例外 = BuildUi 声明行原顶格（缺 1 tab）→ 补 1 tab（D2，沿用 B4 先例）。
+       验证：编译 0/0；--no-incremental 重建 SelfTest → 120/120 PASS（含引擎新鲜度守卫）；
+       V1 三判据（删后 0 差异 / 纯子序列 / 方法体仅声明行缩进差异）全过；调用点 BuildUi(); 逐字未改；
+       MainForm.cs 9 条 using 一条未动（纯删除）。本块 5 条 using（System/Diagnostics/Drawing/IO/
+       WinForms），不需 System.Linq（与 B4 的 FileCollection 不同）。发布 exe 补刷（D6）。
+19:2x  B6 注释批（CQ-09，v4.17 修订十四）：7 文件方法/属性 doc 覆盖率 100%（45/78 → 78/78，
+19:5x  格式债小批（修订十四·补二）：版本变更记录.txt 双 BOM → 单 BOM（考证引入点 c1ed5fe，修订五~八合并时工具重复写入；-3 字节逐字节保真）+ MainForm.cs L187 四空格缩进 → tab（B5 拆分遗留，D3 留待本批；numstat 1/1 仅缩进）；编译 0/0、SelfTest 120/0；发布 exe 补刷（dead4f3d）。
+10-19  B6·补（修订十四·补三）：QA 独立补验 B6+B7 全过（E2E 113/2 与基线吻合、SelfTest 120/0、exe md5 一致），唯一偏差 = 覆盖率「78/78」分母系设计期漏计 BuildGrid + 设计排除 RunCore/MarkAllCancelled；用户裁决补齐 3 处私有方法 doc → 全口径 97/97=100%；编译 0/0、SelfTest 120/0；发布 exe 补刷（58944ddd）。
+       补 33 处）；纯注释新增（删除行 0、新增行逐行以 /// 开头）；PRD 口径矛盾（public/internal
+       100% = +2 条 vs 计数 ≥50% = +14 条）经用户裁决改按覆盖率口径；工程师写完全部 33 处后被
+       平台 429 限流中断（配额次日 17:08 重置），T2 自验 / T3 文档与发布 exe / T4 提交由主理人
+       接手完成。发布 exe 补刷（D8）。
+
+----------------------------------------------------------------
+四、Git 里程碑
+----------------------------------------------------------------
+    10-16  v4.17 修订九（B1 注释批）：CQ-03 空 catch 注释规范化 111 处 + CQ-04 BgLogger XML doc
+           10 方法，零可执行变更（18 源码 .cs；编译 0/0、SelfTest 108/108；行号锚定随注释平移同步）。
+    10-16  v4.17 修订十（B2 异常可见化批）：CQ-01/02/05/06，8 文件 +166/-17，
+           全部落在异常/失败分支、成功路径零变化（编译 0/0、SelfTest 115/115；只提交未推送）。
+    10-16  v4.17 修订十·补（B2-R1 修复轮）：CQ-06 B-4 设置保存失败可见化三处联动
+            + CQ-02 日志造期失败降级仅内存模式（编译 0/0、SelfTest 120/120；
+            B-4/P2 真机复现通过；发布 exe 重建；只提交未推送）。
+    10-16  v4.17 修订十一（B3 整洁项批）：CQ-07 看门狗 15s 轮询改事件等待，
+           停止响应 3.1s→约 0.1s（真机 A/B）；判定体逐字不变（编译 0/0、
+           SelfTest 120/120；发布 exe 重建；只提交未推送）。
+    10-16  v4.17 修订十一·补（B3-R1 修复轮）：看门狗停止段 Dispose 加 Join 返回值守卫
+           （防御性；P3 复核后确认原机制不成立，保留修复；编译 0/0、SelfTest 120/120、
+           回归 tail 68.5/75.3ms 无退化；发布 exe 重建 md5 22fad152…；只提交未推送）。
+    10-16  v4.17 修订十二（B4 结构批 CQ-08 首批）：MainForm 两块 partial 原样搬迁
+           （设置/持久化 4 + 拖放与文件收集 8，2103→1863 行；纯移动、行为零变化；
+           编译 0/0、SelfTest 120/120；只提交未推送）。
+    10-16  v4.17 修订十三（B5 结构批 CQ-08 第二批）：MainForm BuildUi() 665 行 partial 原样搬迁
+           （1863→1197 行，达成 CQ-08 ≤1400；纯移动、行为零变化；编译 0/0、SelfTest 120/120；
+           发布 exe 补刷；只提交未推送）。
+    10-16  v4.17 修订十四（B6 注释批 CQ-09）：7 文件方法/属性 doc 覆盖率 100%（45/78→78/78，
+    10-16  v4.17 修订十四·补二（格式债小批）：版本变更记录.txt 双 BOM → 单 BOM（-3 字节）+           MainForm.cs L187 四空格 → tab（1 行）；纯空白/编码零行为影响；编译 0/0、SelfTest 120/0；           发布 exe 补刷；只提交未推送。
+10-19  v4.17 修订十四·补三（B6·补）：3 处私有方法 doc 补齐（QA 补验裁决项）；全口径 97/97=100%；编译 0/0、SelfTest 120/0；发布 exe 补刷；只提交未推送。
+           补 33 处纯注释、删除行 0；编译 0/0 含 CS1570=0、SelfTest 120/120；发布 exe 补刷；
+           只提交未推送）。
+8f6c7f2  10-07（个人机）§24 收口：删测试产物与 v4.12。
+10-16  v4.17 修订八（C 档 C3 收尾）：失败原因内联展开 + 键盘可达性 + 设置页三分类分栏，
+               含两处列宽/高度布局陷阱修复（手册 5.13；10 文件 +622/−64；已随 main 推送 origin）。
+8974e8f  10-15  v4.17 修订一~三交付（138 文件：v4.17 全量 82 + .planning + 手册；
+                v4.15：50 纯删 + 48 重命名搬入 v4.17）。
+3c6937c  10-15  .planning 状态刷新（验收通过）。
+ea50c40  10-15  .planning 记录手册合并进 lessons.md。
+76b9be4  10-15  版本变更记录.txt 建立（规则七.2：版本总账）。
+远端：GitHub 个人仓库 zzh112212/Dwg-To-PDF（origin 现为 ssh://git@ssh.github.com:443/...；
+       github.com:443 本机不可达——域名级封锁，HTTPS 直推与 api 只读例外，见 13:5x）。
+（main 合并）10-16  ui-optimization → main 快进合并至 c1ed5fe（修订五/六/六·补/七/八 + .planning 共 7 提交，
+         diff 0、无冲突）；**main 与 ui-optimization 均已推送 origin**（13:5x，SSH over 443；
+         main = de9d5f9 与本地三方一致）；ui-optimization 分支保留作批次存档（C1~C3 每批可单独 revert）。
+（推送台账）10-16 13:5x  SSH over 443 通道打通：本机 ed25519 推送密钥 + 仓库级 deploy key（可写）
+         + 主机指纹核对；GCM credentialStore=manager 根治选择器弹窗；
+         .planning 提交 phase8.12 交接态（task_plan/handoff/progress/memory 同步，等待下一次版本优化）。
+10-19  v4.17 修订十五（HQ 阈值链路清理）：删除 PrintQuality 的 IsHighQuality/PlotterFor/MapMedia/
+       ThresholdBytes/HighQualityPlotterName、PrintOptions 与 AppSettings 的 HighQualityThresholdBytes
+       （含 settings.json 同名键，顺带修掉 ToJson 把该键写两遍的缺陷）、PageSetupPreprocessor 透传、
+       ConverterEngine 的 hqStat 计数链、MainForm 注入；SelfTest 删 5 条编码旧 API 的断言、
+       删 --probe-hq-media 探针、补 2 条（JSON 无该键 / 相邻 RasterImageDpi 未误删）。
+       行为零变化：设备恒 DWG TO PDF.pc3。编译 0/0、SelfTest 117/117（基线 120，删 5 补 2）、
+       E2E 全量 115 张 113 成功 2 失败（H77 风扇件既有）；发布 exe 补刷 md5 7c108f7e2a72f685f98cc005814a6f32；
+       只提交未推送。
