@@ -582,3 +582,33 @@
 - **终态**：远端仅 `refs/heads/main` = `40cfff6`，与本地一致；`git status -sb` = `## main...origin/main` 无差异；
   API `size` 2843 KB、`pushed_at` 2026-10-19T04:49:38Z、`default_branch` = main。
 - **副作用**：远端旧历史不可达，唯一副本为工作区根 `Dwg-To-PDF-历史备份-20261019.bundle`。
+## 会话三十一（2026-10-19 17:0x）：修订十六——环境自检讨 + 打印机图标 + 重新自检
+
+- 用户反馈三件事：① 环境检查每次打开都弹（诉求"运行一次就行"）；② 双击 exe 弹 SmartScreen；
+  ③ 顺手给应用加个打印机样式图标。中途用户截图暴露新线索：AutoCAD 弹
+  「所有可能用来保存临时文件的目录都不存在或只读」。
+- **根因定案链**：自检判据="启动交互式 AutoCAD COM" → AutoCAD 把**启动它的程序的可执行文件路径**
+  当作临时文件候选目录 → 中文部署路径下它拒绝初始化 → COM 类工厂 0x80080005 → 自检必失败 → 不写标记
+  → 每次启动重判"首次"。对照实验：ASCII 路径 exe 通过 / 中文路径 exe 失败；ASCII exe + 中文 CWD 通过 /
+  中文 exe + ASCII CWD 失败 → 触发因素是 **exe 路径**而非 CWD。同期 accoreconsole 出图 3/3 正常 →
+  判据本身错，不是环境坏。
+- **走过的弯路（三条，全部回退）**：① `Task.Run` 改 STA 线程；② `OleMsgFilter.Install/Revoke`；
+  ③ 创建实例前把进程 CWD 切到英文临时目录。均未解决中文 exe 路径问题。
+  `ComStarter.cs`、`OleMsgFilter.cs` 已回退到 HEAD（`git checkout HEAD -- <两文件>`）。
+- **最终改动（4 文件 + 自测 + 3 文档）**：
+  - `EnvironmentSelfCheck.cs` 重写：判据改 accoreconsole；删 `Result.Repaired`/`RunOnSta`；
+    失败也写 `自检已失败.txt`；报告文案改为"未找到出图引擎 + 中文路径说明"。
+  - `MainForm.cs`：门闩由 `PassedBefore()` 改 `CheckedBefore()`；失败态不再提 /regserver，
+    改为"设置页点重新自检"；`await Task.Run(Run)`（不再包 RunOnSta）。
+  - `SettingsForm.cs`：按钮区新增「重新自检」→ `ClearMarkers()` + 说明弹窗。
+  - `DwgToPdf.csproj`：`<ApplicationIcon>app.ico</ApplicationIcon>`；新增 `源码工程\app.ico`（纯 Python 绘制）。
+  - 自测：删 2 条 `RunOnSta` 断言，补 5 条标记机制断言（路径不同名 / 仅失败标记时 CheckedBefore=true 且
+    PassedBefore=false / ClearMarkers 两条全清）。
+  - 文档：`运行说明.txt` 第二十七节 + 附录一（SmartScreen）+ 附录二（中文路径与 acad）；
+    `源码说明.txt` EnvironmentSelfCheck 条目；`版本变更记录.txt` 修订十六行。
+- **验证**：编译 0/0；SelfTest **121/121**（%TEMP% 运行，引擎新鲜度按既有口径跳过）；
+  真实中文部署路径实测：自检**秒级通过**（标记内容 = accoreconsole 路径）、**未启动任何 acad**、
+  用户正在运行的 AutoCAD（PID 30536）全程未碰；第二次启动标记 mtime 不变 → 直接跳过。
+- **遗留**：中文部署路径下 COM 辅助路径不可用（不影响出图，3/3 已验证）；要完整 COM 需把工具移到英文路径。
+- **用户明确要求**：他会自行开 AutoCAD，**不要杀他正在运行的 acad 进程**（本会话已两次误杀调试残留实例，
+  已记住并遵守）。

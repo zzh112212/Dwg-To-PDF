@@ -1136,11 +1136,19 @@ internal sealed partial class MainForm : Form
 		}
 	}
 
-	/// <summary>首次使用时的 AutoCAD 环境自检：若本机此前已通过则直接返回；否则弹「环境检查」模态框、在后台线程跑 EnvironmentSelfCheck.Run（期间用 marquee 进度条），结束后按结果（通过 / 自动修复后通过 / 失败）刷新状态栏、写日志并按需弹框。整个自检只在本机首次运行时执行一次。</summary>
+	/// <summary>首次使用时的 AutoCAD 环境自检：若本机此前已检查过则直接返回；否则弹「环境检查」模态框、
+	/// 在 <b>STA 后台线程</b>跑 EnvironmentSelfCheck.Run（AutoCAD COM 要求 STA，Task.Run 的线程池线程恒为 MTA，
+	/// v4.17 修订十六改正），期间用 marquee 进度条，结束后按结果（通过 / 自动修复后通过 / 失败）刷新状态栏、
+	/// 写日志并按需弹框。通过或失败都会写标记，整个自检只在本机首次运行时执行一次；设置页「重新自检」可清除标记重来。</summary>
 	private async System.Threading.Tasks.Task RunFirstUseSelfCheckAsync()
 	{
-		if (EnvironmentSelfCheck.PassedBefore())
+		if (EnvironmentSelfCheck.CheckedBefore())
 		{
+			// v4.17 修订十六：上次未通过时不再重复自检，仅状态栏提示（转换主路径走 accoreconsole，不受影响）
+			if (!EnvironmentSelfCheck.PassedBefore())
+			{
+				_lblStatus.Text = "上次环境自检未通过（转换仍可用；可在设置页「重新自检」）。";
+			}
 			return;
 		}
 		_lblStatus.Text = "首次使用，正在检查本机 AutoCAD 环境…";
@@ -1179,6 +1187,7 @@ internal sealed partial class MainForm : Form
 			dlg.Show(this);
 			try
 			{
+				// v4.17 修订十六：Run() 只定位 accoreconsole（秒级、不启动 AutoCAD）
 				result = await System.Threading.Tasks.Task.Run(EnvironmentSelfCheck.Run);
 			}
 			finally
@@ -1193,19 +1202,15 @@ internal sealed partial class MainForm : Form
 				_lblStatus.Text = "环境自检通过。";
 				BgLogger.Info("环境自检通过。");
 				break;
-			case EnvironmentSelfCheck.Result.Repaired:
-				_lblStatus.Text = "环境自检自动修复后通过。";
-				BgLogger.Info("环境自检失败后已自动 /regserver 修复并通过。");
-				MessageBox.Show(this, "检测到本机 AutoCAD 连接异常，已自动修复并连接成功。", "环境自检", MessageBoxButtons.OK, MessageBoxIcon.Information);
-				break;
 			case EnvironmentSelfCheck.Result.Failed:
-				_lblStatus.Text = "环境自检失败（详见运行日志）。";
+				_lblStatus.Text = "环境自检未通过（出图引擎不可用，详见运行日志）。";
 				BgLogger.Error("环境自检失败：" + EnvironmentSelfCheck.ReportPath);
 				MessageBox.Show(this,
-					"无法连接到本机 AutoCAD。\n\n" +
-					"已尝试自动修复仍未成功，详细原因见：\n" + EnvironmentSelfCheck.ReportPath +
-					"\n\n请按报告中的步骤修复（手动打开一次 AutoCAD，或管理员运行 acad.exe /regserver）后重试。",
-					"环境自检失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					"未在本机找到出图引擎 AutoCAD Core Console（accoreconsole.exe），暂时无法转换。\n\n" +
+					"详细原因见：\n" + EnvironmentSelfCheck.ReportPath +
+					"\n\n本工具用它出图，不需要打开 CAD。按报告中的步骤处理后，" +
+					"在「设置」页点「重新自检」即可再次检查。",
+					"环境自检未通过", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 				break;
 		}
 	}

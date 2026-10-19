@@ -168,3 +168,25 @@
   `pushed_at` 2026-10-19T04:49:38Z。
 - **注意**：远端旧历史已不可达，唯一副本是工作区根 `Dwg-To-PDF-历史备份-20261019.bundle`。
 - **恢复指引**：读本节 → `progress.md`「会话三十」→ 任务仍处「等待用户提下一版本优化计划」的暂停态。
+## 交接态（2026-10-19 17:0x：修订十六——环境自检讨 + 图标 + 重新自检）
+- **根因（实测定案，非猜测）**：原首检判据是"启动一次交互式 AutoCAD COM 再退出"。交互式 AutoCAD
+  会把"启动它的那个程序的可执行文件路径"当作临时文件候选目录；本工具部署路径含中文 → 它直接弹
+  「所有可能用来保存临时文件的目录都不存在或只读」并拒绝初始化 → COM 类工厂必报 0x80080005。
+  实测：exe 在中文路径下自检 64~96 秒必失败；拷到纯英文路径 10 秒通过；**同期 accoreconsole 出图 3/3 完全正常**。
+  又证：ASCII exe + 中文 CWD 也能通过、中文 exe + ASCII CWD 仍失败 → 触发因素是 **exe 自身路径**，不是 CWD。
+- **无效的尝试（已全部回退，勿再走）**：① Task.Run 改 STA 线程；② 装 OleMsgFilter；③ 创建实例前把 CWD 切到
+  英文临时目录。三者都不解决中文 exe 路径问题，`ComStarter.cs` / `OleMsgFilter.cs` 已 `git checkout` 回 HEAD。
+- **最终改法**：`EnvironmentSelfCheck.Run()` 判据改为 `CoreConsoleLocator.FindAccoreConsole() != null`
+  （本工具真正的出图引擎）——秒级、不启动任何 AutoCAD、不会弹 AutoCAD 错误框；失败时报"未找到出图引擎"。
+  删除 `Result.Repaired`、`TryConnectAndQuit` 调用链、`RunOnSta`。
+- **不再每次弹的第二道保险**：失败也写 `运行日志\自检已失败.txt`；`CheckedBefore()` = 通过标记或失败标记任一存在。
+  设置页底部新增「重新自检」按钮 → `EnvironmentSelfCheck.ClearMarkers()`。
+- **图标**：新增 `源码工程\app.ico`（纯 Python 光栅化绘制，16~256 七档 PNG 档位，主色 #185FA5 与 UiTheme.Primary 一致）；
+  `DwgToPdf.csproj` 加 `<ApplicationIcon>app.ico</ApplicationIcon>`；已校验 7 个 PNG 档位原始字节确实编译进 exe。
+- **验证**：编译 0 警告 0 错误；SelfTest 121/121（删 2 条测 RunOnSta 的旧断言 + 补 5 条锁定标记机制）；
+  真实中文部署路径下启动 → 自检秒级通过（标记内容含 accoreconsole 路径）、**未启动任何 acad**、用户正在运行的
+  AutoCAD（PID 30536）全程未被触碰；第二次启动标记 mtime 不变 = 直接跳过自检。
+- **已知遗留（不影响出图）**：中文部署路径下 COM 辅助路径（PageSetupPreprocessor/CadConverter 兜底）不可用。
+  若用户要完整 COM 能力，需把工具移到纯英文路径（如 D://Tools//DwgToPdf//）。
+- **恢复指引**：读本节 → `progress.md`「会话三十一」→ 若要继续，跑 `lessons.py view` 并按工作区根
+  `目录结构说明.txt` 第五节编译/回归。

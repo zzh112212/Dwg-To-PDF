@@ -8,6 +8,9 @@
     <Version>4.17.0.0</Version>
     <FileVersion>4.17.0.0</FileVersion>
     <AssemblyVersion>4.17.0.0</AssemblyVersion>
+    <!-- v4.17 修订十六：应用图标（打印机样式，与主色 #185FA5 一致）。
+         csc 会把它编译成 Win32 图标资源，Explorer / 任务栏 / 窗口标题栏默认取它。 -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Core" />

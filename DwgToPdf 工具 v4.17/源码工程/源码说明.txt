@@ -363,8 +363,11 @@
     │                             frame_cache.json；DWGTOPDF_KEEP_CACHE=1 保留缓存）**
     ├─ CoreConsoleLocator.cs      定位 accoreconsole.exe（注册表 + Program Files 兜底，
     │                             支持 AutoCAD 多版本）
-    ├─ EnvironmentSelfCheck.cs    首次启动环境自检（AutoCAD COM 连接检查，
-    │                             失败自动 /regserver 修复，以"自检已通过.txt"标记）
+    ├─ EnvironmentSelfCheck.cs    首次启动环境自检。v4.17 修订十六起判据改为
+    │                             "能否定位 accoreconsole"（出图引擎，秒级、不启动
+    │                             AutoCAD）；原判据"启动交互式 AutoCAD COM"会因
+    │                             中文部署路径必失败。通过/失败各写一个标记，
+    │                             任一存在即不再自检；设置页「重新自检」可清除
     ├─ FrameCache.cs              图框缓存 frame_cache.json（键=路径+大小+修改时间
     │                             +版本）；v4.3 校验拦截的文件不写缓存；
     │                             v4.4 新增 Snapshot(outputFolder) 一次性加载为

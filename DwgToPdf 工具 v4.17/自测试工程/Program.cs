@@ -128,6 +128,8 @@ namespace DwgToPdf.SelfTest
             TestExtractScript();
             TestPlotScript();
             TestSettingsJsonNoHqKey();
+            // v4.17 修订十六：首检判据改为 accoreconsole，且"检查过（含失败）就不再重复"
+            TestSelfCheckMarkers();
             TestFrameTemplateLibrary();
             TestConvertProfile();
             TestSmartConcurrency();
@@ -1164,6 +1166,57 @@ namespace DwgToPdf.SelfTest
                 "settings json 不再包含 HighQualityThresholdBytes 键");
             Assertion.True(json.IndexOf("\"RasterImageDpi\"", StringComparison.Ordinal) >= 0,
                 "settings json 仍含 RasterImageDpi 键（未误删相邻字段）");
+        }
+
+        // v4.17 修订十六：首检判据改为 accoreconsole，且"检查过（含失败）就不再重复"。
+        // 回归要点：① 通过标记与失败标记是两条独立路径，失败标记不能顶替通过标记；
+        // ② 只有失败标记时 CheckedBefore 仍为 true（这是"不再每次启动都弹"的机制本体）；
+        // ③ ClearMarkers 能两条一起清掉（设置页「重新自检」靠它）。
+        // 测试只在自测进程自己的运行日志目录里临时写文件，用完即删，不启动 AutoCAD、无外部副作用。
+        private static void TestSelfCheckMarkers()
+        {
+            // N1：两条标记路径不同名、文件名符合约定
+            string ok = DwgToPdf.Batch.EnvironmentSelfCheck.MarkerPath;
+            string fail = DwgToPdf.Batch.EnvironmentSelfCheck.FailMarkerPath;
+            Assertion.True(!string.Equals(ok, fail, StringComparison.OrdinalIgnoreCase),
+                "自检：通过标记与失败标记路径不同名");
+            Assertion.True(ok.EndsWith("自检已通过.txt", StringComparison.Ordinal) &&
+                           fail.EndsWith("自检已失败.txt", StringComparison.Ordinal),
+                "自检：通过 / 失败标记文件名符合约定", ok + " | " + fail);
+
+            // N2：仅存在失败标记 → 算"已检查过"、不算"已通过"（不再每次启动重跑的机制本体）
+            bool hadOk = System.IO.File.Exists(ok);
+            bool hadFail = System.IO.File.Exists(fail);
+            try
+            {
+                if (hadOk) System.IO.File.Delete(ok);
+                System.IO.File.WriteAllText(fail, "selftest", new System.Text.UTF8Encoding(false));
+                Assertion.True(DwgToPdf.Batch.EnvironmentSelfCheck.CheckedBefore(),
+                    "自检：仅有失败标记时 CheckedBefore=true（不再每次启动重跑）");
+                Assertion.True(!DwgToPdf.Batch.EnvironmentSelfCheck.PassedBefore(),
+                    "自检：仅有失败标记时 PassedBefore=false（不算通过）");
+            }
+            finally
+            {
+                // 还原现场，避免污染后续运行
+                try { if (!hadFail) System.IO.File.Delete(fail); } catch { }
+                try { if (hadOk) System.IO.File.WriteAllText(ok, "selftest"); } catch { }
+            }
+
+            // N3：ClearMarkers 两条一起清（设置页「重新自检」依赖）
+            try
+            {
+                System.IO.File.WriteAllText(ok, "selftest");
+                System.IO.File.WriteAllText(fail, "selftest");
+                DwgToPdf.Batch.EnvironmentSelfCheck.ClearMarkers();
+                Assertion.True(!DwgToPdf.Batch.EnvironmentSelfCheck.CheckedBefore(),
+                    "自检：ClearMarkers 后两条标记均清除（重新自检可用）");
+            }
+            finally
+            {
+                try { if (!hadOk) System.IO.File.Delete(ok); } catch { }
+                try { if (!hadFail) System.IO.File.Delete(fail); } catch { }
+            }
         }
 
         private static void TestFrameTemplateLibrary()

@@ -23,7 +23,7 @@ public class SettingsForm : Form
     private ListBox _lstCategories;
     private Panel _contentHost;
     private Panel _pageQuality, _pageBlock, _pagePrint;
-    private Button _btnOk, _btnCancel, _btnReset;
+    private Button _btnOk, _btnCancel, _btnReset, _btnSelfCheck;
 
     // Tab 1 质量审查
     private NumericUpDown _numMinFileSize; // 单位 KB
@@ -130,12 +130,16 @@ public class SettingsForm : Form
         _btnOk = new Button { Text = "确定", Width = 78, Height = 28 };
         _btnCancel = new Button { Text = "取消", Width = 78, Height = 28 };
         _btnReset = new Button { Text = "恢复默认", Width = 84, Height = 28 };
+        // v4.17 修订十六：自检失败也写标记、不再每次启动重试，故提供清除入口
+        _btnSelfCheck = new Button { Text = "重新自检", Width = 84, Height = 28 };
         _btnOk.Click += OnOk;
         _btnCancel.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };
         _btnReset.Click += OnReset;
+        _btnSelfCheck.Click += OnSelfCheck;
         btnPanel.Controls.Add(_btnOk);
         btnPanel.Controls.Add(_btnCancel);
         btnPanel.Controls.Add(_btnReset);
+        btnPanel.Controls.Add(_btnSelfCheck);
         root.Controls.Add(btnPanel, 0, 1);
 
         AcceptButton = _btnOk;
@@ -548,6 +552,16 @@ public class SettingsForm : Form
         ResultSettings = s;
         DialogResult = DialogResult.OK;
         Close();
+    }
+
+    /// <summary>v4.17 修订十六：清除通过 / 失败标记，使下次启动重新执行本机 AutoCAD 环境自检。</summary>
+    private void OnSelfCheck(object sender, EventArgs e)
+    {
+        EnvironmentSelfCheck.ClearMarkers();
+        MessageBox.Show(this,
+            "已清除自检记录。\n\n下次启动本工具时会重新检查本机 AutoCAD 环境。\n" +
+            "（首次检查需启动一次 AutoCAD，约 30 秒，属正常现象。）",
+            "重新自检", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void OnReset(object sender, EventArgs e)
